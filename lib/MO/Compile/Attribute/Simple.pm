@@ -12,9 +12,9 @@ has name => (
 );
 
 sub methods {
-	my ( $self, $class ) = @_;
+	my ( $self, $class, @slots ) = @_;
 
-	my $slot = ( $class->layout->get_slots($self) )[0];
+	my $slot = $slots[0];
 
 	return {	
 		$_->name => MO::Run::Method::Simple->new(
@@ -32,7 +32,7 @@ sub methods {
 }
 
 sub fields {
-	my $self = shift;
+	my ( $self, $class ) = @_;
 
 	return MO::Compile::Field::Simple->new(
 		name      => $self->name,

@@ -20,27 +20,29 @@ has fields => (
 	required   => 1,
 );
 
-has slots => (
+has _slots => (
 	isa => "HashRef",
 	is  => "ro",
 	lazy    => 1,
 	default => sub { $_[0]->_calculate_slots },
 );
 
+sub slots {
+	my $self = shift;
+	values %{ $self->_slots };
+}	
+
 sub get_slots {
-	my ( $self, $attribute ) = @_;
-	@{ $self->slots->{$attribute} };
+	my ( $self, @fields ) = @_;
+	@{ $self->_slots }{ @fields };
 }	
 
 sub _calculate_slots {
 	my $self = shift;
 
-	tie my %hash, 'Tie::RefHash';
-
-	foreach my $field ( $self->fields ) {
-		my $slot = MO::Compile::Slot::Simple->new( name => $field->name );
-		push @{ $hash{ $field->attribute } ||= [] }, $slot;
-	}
+	tie my %hash, 'Tie::RefHash', map {
+		$_ => MO::Compile::Slot::Simple->new( name => $_->name ),
+	} $self->fields;
 
 	return \%hash;
 }
