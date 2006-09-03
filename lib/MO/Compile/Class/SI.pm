@@ -7,8 +7,6 @@ use MO::Run::ResponderInterface::MethodTable;
 use MO::Run::Method::Simple;
 use MO::Compile::Layout::Simple;
 
-use Tie::RefHash;
-
 has superclass => (
 	isa => "MO::Compile::Class::SI",
 	is  => "ro",
@@ -32,36 +30,17 @@ has class_methods => (
 	default => sub { { } },
 );
 
-has layout => (
-	isa => "MO::Compile::Layout::Simple",
-	is  => "ro",
-	lazy => 1,
-	default => sub { $_[0]->_build_layout },
-);
-
-has _attr_fields => (
-	isa => "HashRef",
-	is  => "ro",
-	lazy => 1,
-	default => sub {
-		tie my %hash, "Tie::RefHash";
-		\%hash;
-	},
-);
+sub layout {
+	my $self = shift;
+	$self->_build_layout( map { $_->fields } values %{ $self->all_attributes } );
+}
 
 sub _build_layout {
-	my $self = shift;
-	my $attrs = $self->all_attributes;
-
-	my $attr_fields = $self->_attr_fields;
-
-	%$attr_fields = (
-		map { $_ => [ $_->fields ] } values %$attrs,
-	);
+	my ( $self, @fields ) = @_;
 
 	MO::Compile::Layout::Simple->new(
 		class  => $self,
-		fields => [ map { @$_ } values %$attr_fields ],
+		fields => \@fields,
 	);
 }
 
@@ -109,10 +88,29 @@ sub methods_of_attr {
 sub compile_attribute {
 	my ( $self, $attr ) = @_;
 
-	my @fields = @{ $self->_attr_fields->{$attr} || [] };
-	my @slots = $self->layout->get_slots( @fields );
+	my @slots = $self->_attr_slots( $attr );
 
 	return $attr->compile( class => $self, slots => \@slots );
+}
+
+sub _attr_slots {
+	my ( $self, $the_attr ) = @_;
+	
+	my @fields;
+	my ( $from, $to );
+	foreach my $attr ( values %{ $self->all_attributes } ) {
+		if ( $attr == $the_attr ) {
+			$from = scalar @fields;
+			push @fields, $attr->fields;
+			$to = $#fields;
+		} else {
+			push @fields, $attr->fields;
+		}
+	}
+
+	die unless defined $from and defined $to;
+
+	( $self->layout->slots )[ $from .. $to ];
 }
 
 sub all_instance_methods {

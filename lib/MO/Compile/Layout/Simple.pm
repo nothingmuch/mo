@@ -5,8 +5,6 @@ use Moose;
 
 use MO::Compile::Slot::Simple;
 
-use Tie::RefHash;
-
 has class => (
 	isa => "MO::Compile::Class::SI",
 	is  => "ro",
@@ -20,31 +18,9 @@ has fields => (
 	required   => 1,
 );
 
-has _slots => (
-	isa => "HashRef",
-	is  => "ro",
-	lazy    => 1,
-	default => sub { $_[0]->_calculate_slots },
-);
-
 sub slots {
 	my $self = shift;
-	values %{ $self->_slots };
-}	
-
-sub get_slots {
-	my ( $self, @fields ) = @_;
-	@{ $self->_slots }{ @fields };
-}	
-
-sub _calculate_slots {
-	my $self = shift;
-
-	tie my %hash, 'Tie::RefHash', map {
-		$_ => $self->slot_class($_)->new( name => $_->name ),
-	} $self->fields;
-
-	return \%hash;
+	map { $self->slot_class($_)->new( name => $_->name ) } $self->fields;
 }
 
 sub slot_class {
