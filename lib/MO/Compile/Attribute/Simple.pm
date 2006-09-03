@@ -3,33 +3,15 @@
 package MO::Compile::Attribute::Simple;
 use Moose;
 
+use MO::Run::Attribute::Simple;
 use MO::Compile::Field::Simple;
 use MO::Run::Method::Simple;
 
 has name => (
 	isa => "Str",
 	is  => "ro",
+	required => 1,
 );
-
-sub methods {
-	my ( $self, $class, @slots ) = @_;
-
-	my $slot = $slots[0];
-
-	return {	
-		$_->name => MO::Run::Method::Simple->new(
-			body => sub {
-				my ( $instance, @args ) = @_;
-
-				if ( @args ) {
-					return $slot->set_value( $instance, @args );
-				} else {
-					return $slot->get_value( $instance );
-				}
-			},
-		),
-	};
-}
 
 sub fields {
 	my ( $self, $class ) = @_;
@@ -39,6 +21,15 @@ sub fields {
 		attribute => $self,
 	);
 }
+
+sub compile {
+	my ( $self, %params ) = @_;
+
+	return MO::Run::Attribute::Simple->new(
+		attribute => $self,
+		%params,
+	);
+}	
 
 __PACKAGE__;
 

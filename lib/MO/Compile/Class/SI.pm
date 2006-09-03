@@ -101,10 +101,18 @@ sub all_accessors {
 sub methods_of_attr {
 	my ( $self, $attr ) = @_;
 
+	my $run_attr = $self->compile_attribute( $attr );
+
+	$run_attr->methods;
+}
+
+sub compile_attribute {
+	my ( $self, $attr ) = @_;
+
 	my @fields = @{ $self->_attr_fields->{$attr} || [] };
 	my @slots = $self->layout->get_slots( @fields );
 
-	$attr->methods( $self, @slots );
+	return $attr->compile( class => $self, slots => \@slots );
 }
 
 sub all_instance_methods {
@@ -121,10 +129,18 @@ sub all_attributes {
 	$self->_get_all( "attributes" );
 }
 
+sub all_compiled_attributes {
+	my $self = shift;
+	my $attrs = $self->all_attributes;
+	return { map { $_ => $self->compile_attribute($attrs->{$_}) } keys %$attrs };
+}
+
 sub class_interface {
 	my $self = shift;
 
-	my $layout = $self->layout;
+	my $layout              = $self->layout;
+	my @compiled_attributes = values %{ $self->all_compiled_attributes };
+	my $instance_interface  = $self->instance_interface;
 
 	MO::Run::ResponderInterface::MethodTable->new(
 		methods => {
@@ -133,9 +149,14 @@ sub class_interface {
 				body => sub {
 					my ( $class, @params ) = @_;
 
+					my $object = $layout->create_instance_structure;
+
+					$_->initialize( $object, @params )
+						for @compiled_attributes;
+
 					MO::Run::Responder::Object->new(
-						object              => $class->layout->create_instance_structure( @params ),
-						responder_interface => $class->instance_interface,
+						object              => $object,
+						responder_interface => $instance_interface,
 					);
 				}
 			),

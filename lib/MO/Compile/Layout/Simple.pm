@@ -41,15 +41,22 @@ sub _calculate_slots {
 	my $self = shift;
 
 	tie my %hash, 'Tie::RefHash', map {
-		$_ => MO::Compile::Slot::Simple->new( name => $_->name ),
+		$_ => $self->slot_class($_)->new( name => $_->name ),
 	} $self->fields;
 
 	return \%hash;
 }
 
+sub slot_class {
+	my ( $self, $field ) = @_;
+	"MO::Compile::Slot::Simple";
+}
+
 sub create_instance_structure {
-	my ( $self, @params ) = @_;
-	return { @params };
+	my ( $self ) = @_;
+	my $instance = { };
+	$_->construct( $instance ) for $self->slots;;
+	return $instance;
 }
 
 __PACKAGE__;
