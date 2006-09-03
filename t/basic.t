@@ -62,7 +62,7 @@ ok( $thunk, "dispatch yielded a thunk" );
 
 is( ref($thunk), "CODE", "thunk is a code ref" );
 
-like( $thunk->(), qr/^moose: moosenfu=HASH\((?i:0x[a-f0-9]+)\) bar$/, "thunk evaluates correctly" );
+like( $thunk->(), qr/^moose: HASH\((?i:0x[a-f0-9]+)\) bar$/, "thunk evaluates correctly" );
 
 ok(
 	!$obj_box->responder_interface->dispatch(
