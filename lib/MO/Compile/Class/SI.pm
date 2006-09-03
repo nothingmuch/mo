@@ -12,7 +12,7 @@ has superclass => (
 	is  => "ro",
 );
 
-has attributes => ( # FIXME unused
+has attributes => (
 	isa => "HashRef",
 	is  => "ro",
 	default => sub { { } },
@@ -45,11 +45,6 @@ sub _build_layout {
 		class  => $self,
 		fields => [ map { $_->fields } values %$attrs ],
 	);
-}
-
-sub instance_methods {
-	my $self = shift;
-	$self->regular_instance_methods; # FIXME project over interfaced class
 }
 
 sub class_precedence_list {
