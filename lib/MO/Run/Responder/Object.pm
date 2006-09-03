@@ -6,7 +6,7 @@ use Moose;
 with "MO::Run::Abstract::Responder";
 
 has object => (
-	isa => "Object",
+	isa => "Any",
 	is  => "ro",
 );
 

@@ -41,7 +41,7 @@ my $i = MO::Run::ResponderInterface::MethodTable->new(
 	},
 );
 
-my $obj = bless {}, "moosenfu";
+my $obj = {};
 
 my $obj_box = MO::Run::Responder::Object->new(
 	object              => $obj,
