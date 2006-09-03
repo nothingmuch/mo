@@ -9,24 +9,24 @@ use MO::Compile::Layout::Simple;
 
 has superclass => (
 	isa => "MO::Compile::Class::SI",
-	is  => "ro",
+	is  => "rw",
 );
 
 has attributes => (
 	isa => "HashRef",
-	is  => "ro",
+	is  => "rw",
 	default => sub { { } },
 );
 
 has regular_instance_methods => (
 	isa => "HashRef",
-	is  => "ro",
+	is  => "rw",
 	default => sub { { } },
 );
 
 has class_methods => (
 	isa => "HashRef",
-	is  => "ro",
+	is  => "rw",
 	default => sub { { } },
 );
 

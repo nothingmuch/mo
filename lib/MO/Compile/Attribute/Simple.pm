@@ -9,7 +9,7 @@ use MO::Run::Method::Simple;
 
 has name => (
 	isa => "Str",
-	is  => "ro",
+	is  => "rw",
 	required => 1,
 );
 

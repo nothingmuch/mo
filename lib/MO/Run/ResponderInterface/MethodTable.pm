@@ -7,7 +7,7 @@ with "MO::Run::Abstract::ResponderInterface";
 
 has methods => (
 	isa => "HashRef",
-	is  => "ro",
+	is  => "rw",
 );
 
 sub method {

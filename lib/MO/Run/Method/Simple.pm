@@ -5,7 +5,7 @@ use Moose;
 
 has body => (
 	isa => "CodeRef",
-	is  => "ro",
+	is  => "rw",
 );
 
 __PACKAGE__;

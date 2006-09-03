@@ -7,12 +7,12 @@ with "MO::Run::Abstract::Invocation";
 
 has name => (
 	isa => "Str",
-	is  => "ro",
+	is  => "rw",
 );
 
 has arguments => (
 	isa => "ArrayRef",
-	is  => "ro",
+	is  => "rw",
 	auto_deref => 1,
 );
 
