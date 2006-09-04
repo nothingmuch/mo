@@ -8,7 +8,7 @@ use MO::Util::Collection::Shadow;
 use MO::Util::Collection::Merge;
 use MO::Run::ResponderInterface::MethodTable;
 use MO::Run::MethodDefinition::Simple;
-use MO::Compile::Class::SI::Layout;
+use MO::Compile::Class::SI::Layout::Hash;
 
 {
 	package MO::Compile::Class::SI::Shadow;
@@ -62,7 +62,7 @@ sub layout {
 sub _build_layout {
 	my ( $self, @fields ) = @_;
 
-	MO::Compile::Class::SI::Layout->new(
+	MO::Compile::Class::SI::Layout::Hash->new(
 		class  => $self,
 		fields => \@fields,
 	);

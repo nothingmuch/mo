@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-package MO::Compile::Slot::Simple;
+package MO::Compile::Slot::HashElement;
 use Moose;
 
 has name => (

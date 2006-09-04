@@ -1,9 +1,9 @@
 #!/usr/bin/perl
 
-package MO::Compile::Class::SI::Layout;
+package MO::Compile::Class::SI::Layout::Hash;
 use Moose;
 
-use MO::Compile::Slot::Simple;
+use MO::Compile::Slot::HashElement;
 
 has class => (
 	isa => "MO::Compile::Class::SI",
@@ -25,7 +25,7 @@ sub slots {
 
 sub slot_class {
 	my ( $self, $field ) = @_;
-	"MO::Compile::Slot::Simple";
+	"MO::Compile::Slot::HashElement";
 }
 
 sub empty_instance_structure {
