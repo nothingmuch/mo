@@ -6,7 +6,7 @@ use warnings;
 use Test::More 'no_plan';
 
 use ok 'MO::Run::ResponderInterface::MethodTable';
-use ok 'MO::Run::Responder::Object';
+use ok 'MO::Run::Responder::Invocant';
 use ok 'MO::Run::Invocation::Method';
 use ok 'MO::Run::Method::Simple';
 
@@ -17,7 +17,7 @@ sub does_ok ($$;$) {
 }
 
 does_ok( "MO::Run::Invocation::Method", "MO::Run::Abstract::Invocation" );
-does_ok( "MO::Run::Responder::Object", "MO::Run::Abstract::Responder" );
+does_ok( "MO::Run::Responder::Invocant", "MO::Run::Abstract::Responder" );
 does_ok( "MO::Run::ResponderInterface::MethodTable", "MO::Run::Abstract::ResponderInterface" );
 
 my $foo = MO::Run::Invocation::Method->new(
@@ -43,7 +43,7 @@ my $i = MO::Run::ResponderInterface::MethodTable->new(
 
 my $obj = {};
 
-my $obj_box = MO::Run::Responder::Object->new(
+my $obj_box = MO::Run::Responder::Invocant->new(
 	object              => $obj,
 	responder_interface => $i,
 );

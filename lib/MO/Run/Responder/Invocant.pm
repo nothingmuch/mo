@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-package MO::Run::Responder::Object;
+package MO::Run::Responder::Invocant;
 use Moose;
 
 with "MO::Run::Abstract::Responder";

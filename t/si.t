@@ -9,7 +9,7 @@ use ok 'MO::Compile::Class::SI';
 use ok 'MO::Compile::Method::Simple';
 use ok 'MO::Compile::Attribute::Simple';
 use ok 'MO::Run::Invocation::Method';
-use ok 'MO::Run::Responder::Object';
+use ok 'MO::Run::Responder::Invocant';
 
 my $base = MO::Compile::Class::SI->new(
 	regular_instance_methods => MO::Util::Collection->new(
@@ -35,7 +35,7 @@ my $sub = MO::Compile::Class::SI->new(
 	),
 );
 
-my $base_box = MO::Run::Responder::Object->new(
+my $base_box = MO::Run::Responder::Invocant->new(
 	object              => $base, # meh ;-)
 	responder_interface => $base->class_interface,
 );
@@ -45,7 +45,7 @@ my $base_obj_box = $base_box->responder_interface->dispatch(
 	MO::Run::Invocation::Method->new( name => "create_instance", arguments => [ elk => "moose" ] ),
 )->();
 
-my $sub_box = MO::Run::Responder::Object->new(
+my $sub_box = MO::Run::Responder::Invocant->new(
 	object              => $sub, # meh ;-)
 	responder_interface => $sub->class_interface,
 );

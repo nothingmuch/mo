@@ -188,7 +188,7 @@ sub constructor {
 				$_->initialize( $object, @params )
 				for @compiled_attributes;
 
-				MO::Run::Responder::Object->new(
+				MO::Run::Responder::Invocant->new(
 					object              => $object,
 					responder_interface => $instance_interface,
 				);
