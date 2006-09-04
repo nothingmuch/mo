@@ -29,7 +29,23 @@ sub BUILD {
 
 sub slots {
 	my $self = shift;
-	map { $self->slot_class($_)->new( name => $_->name ) } $self->fields;
+	map { $self->slot_for_field($_) } $self->fields;
+}
+
+sub slot_for_field {
+	my ( $self, $field ) = @_;
+
+	$self->slot_class($field)->new(
+		name => $self->slot_name_for_field($field),
+	);
+}
+
+sub slot_name_for_field {
+	my ( $self, $field ) = @_;
+
+	$field->private
+		? sprintf('private:%s::%s', $field->class, $field->name)
+		: $field->name;
 }
 
 sub slot_class {

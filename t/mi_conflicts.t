@@ -8,8 +8,6 @@ use Test::More 'no_plan';
 use ok "MO::Compile::Class::MI";
 use ok 'MO::Compile::Attribute::Simple';
 
-use Test::MockObject::Extends;
-
 eval {
 	MO::Compile::Class::MI->new(
 		attributes => [
@@ -27,32 +25,49 @@ ok( $@, "can't create class with two accessors of the same name" );
 like( $@, qr/name conflict/, "the right error" );
 
 
-
-my $mo = Test::MockObject::Extends->new(
-	MO::Compile::Attribute::Simple->new(
-		name => "y",
-	),
-);
-
-$mo->mock( compile => sub {
-	my ( $self, @args ) = @_;
-	MO::Compile::Attribute::Simple->new(
-		name => "x",
-	)->compile(@args);
-});
-
-	use Data::Dumper;
 eval {
-	warn Dumper( MO::Compile::Class::MI->new(
+	MO::Compile::Class::MI->new(
 		attributes => [
 			MO::Compile::Attribute::Simple->new(
 				name => "x",
 			),
-			$mo,
+			MO::Compile::Attribute::Simple->new(
+				name          => "y",
+				accessor_name => "x",
+			),
 		],
-	)->instance_interface );
+	)->instance_interface;
 };
 
 ok( $@, "can't create class with accessors that have conflicting methods" );
 like( $@, qr/merged.*name/, "the right error" );
 
+
+
+
+
+my @slots = MO::Compile::Class::MI->new(
+	superclasses => [
+	MO::Compile::Class::MI->new(
+		attributes => [
+			MO::Compile::Attribute::Simple->new(
+				name    => "x",
+				private => 1,
+				accessor_name => "moosen",
+			),
+		],
+	),
+	MO::Compile::Class::MI->new(
+		attributes => [
+			MO::Compile::Attribute::Simple->new(
+				name    => "x",
+				private => 1,
+				accessor_name => "elken",
+			),
+		],
+	),
+	],
+)->layout->slots;
+
+is( @slots, 2, "two slots" );
+like( $_, qr/^private:.*?::x$/, "slot is correctly named" ) for (map { $_->name } @slots)[0, 1];

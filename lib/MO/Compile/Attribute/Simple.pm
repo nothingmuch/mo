@@ -13,11 +13,26 @@ has name => (
 	required => 1,
 );
 
+has accessor_name => (
+	isa => "Str",
+	is  => "rw",
+	lazy    => 1,
+	default => sub { $_[0]->name },
+);
+
+has private => (
+	isa => "Bool",
+	is  => "ro",
+	default => 0,
+);
+
 sub fields {
 	my ( $self, $class ) = @_;
 
 	return MO::Compile::Field::Simple->new(
 		name      => $self->name,
+		private   => $self->private,
+		class     => $class,
 		attribute => $self,
 	);
 }

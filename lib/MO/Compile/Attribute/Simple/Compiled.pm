@@ -8,7 +8,7 @@ use MO::Compile::Method::Simple;
 has attribute => (
 	isa => "MO::Compile::Attribute::Simple",
 	is  => "ro",
-	handles => [ qw/name/ ],
+	handles => [ qw/name accessor_name/ ],
 );
 
 has class => (
@@ -55,7 +55,7 @@ sub methods {
 
 	return (
 		MO::Compile::Method::Simple->new(
-			name       => $self->name,
+			name       => $self->accessor_name,
 			definition => $self->accessor_body($slot),
 		)
 	);
