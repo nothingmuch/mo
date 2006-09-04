@@ -48,12 +48,18 @@ sub _build_layout {
 	);
 }
 
-sub get_all_using_mro {
+sub get_all_using_mro_shadowing {
 	my ( $self, $accessor, @args ) = @_;
 
 	my $shadower = MO::Util::Collection::Shadow::Accessor->new( accessor => $accessor );
 
 	$shadower->shadow( $self->class_precedence_list );
+}
+
+sub get_all_using_mro {
+	my ( $self, $accessor, @args ) = @_;
+
+	map { $_->$accessor->items } reverse $self->class_precedence_list;
 }
 
 sub all_class_methods {
@@ -66,17 +72,22 @@ sub all_class_methods {
 
 sub all_regular_instance_methods {
 	my $self = shift;
-	$self->get_all_using_mro( "regular_instance_methods" );
+	$self->get_all_using_mro_shadowing( "regular_instance_methods" );
+}
+
+sub all_regular_class_methods {
+	my $self = shift;
+	$self->get_all_using_mro_shadowing( "class_methods" )
+}
+
+sub all_attributes_shadowed {
+	my $self = shift;
+	$self->get_all_using_mro_shadowed( "attributes" );
 }
 
 sub all_attributes {
 	my $self = shift;
 	$self->get_all_using_mro( "attributes" );
-}
-
-sub all_regular_class_methods {
-	my $self = shift;
-	$self->get_all_using_mro( "class_methods" )
 }
 
 sub special_class_methods {
