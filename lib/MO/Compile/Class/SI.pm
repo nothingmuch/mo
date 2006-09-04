@@ -7,7 +7,7 @@ use MO::Util::Collection;
 use MO::Util::Collection::Shadow;
 use MO::Util::Collection::Merge;
 use MO::Run::ResponderInterface::MethodTable;
-use MO::Run::Method::Simple;
+use MO::Run::MethodDefinition::Simple;
 use MO::Compile::Class::SI::Layout;
 
 {
@@ -179,7 +179,7 @@ sub constructor {
 
 	return MO::Compile::Method::Simple->new(
 		name       => "create_instance",
-		definition => MO::Run::Method::Simple->new(
+		definition => MO::Run::MethodDefinition::Simple->new(
 			body => sub {
 				my ( $class, @params ) = @_;
 

@@ -8,7 +8,7 @@ use Test::More 'no_plan';
 use ok 'MO::Run::ResponderInterface::MethodTable';
 use ok 'MO::Run::Responder::Invocant';
 use ok 'MO::Run::Invocation::Method';
-use ok 'MO::Run::Method::Simple';
+use ok 'MO::Run::MethodDefinition::Simple';
 
 sub does_ok ($$;$) {
 	my ( $inv, $role, $desc ) = @_;
@@ -32,7 +32,7 @@ my $bar = MO::Run::Invocation::Method->new(
 
 my $i = MO::Run::ResponderInterface::MethodTable->new(
 	methods => {
-		foo => MO::Run::Method::Simple->new(
+		foo => MO::Run::MethodDefinition::Simple->new(
 			body => sub {
 				my ( $self, @args ) = @_;
 				return "moose: $self @args";

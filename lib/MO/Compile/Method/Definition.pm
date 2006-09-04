@@ -6,8 +6,8 @@ use Moose::Util::TypeConstraints;
 
 coerce "MO::Compile::Method::Definition" => (
 	from "CodeRef" => via {
-		require MO::Run::Method::Simple;
-		MO::Run::Method::Simple->new( body => $_[0] )
+		require MO::Run::MethodDefinition::Simple;
+		MO::Run::MethodDefinition::Simple->new( body => $_[0] )
 	},
 );
 

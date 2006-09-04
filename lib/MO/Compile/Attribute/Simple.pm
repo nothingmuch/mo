@@ -5,7 +5,7 @@ use Moose;
 
 use MO::Compile::Attribute::Simple::Compiled;
 use MO::Compile::Field::Simple;
-use MO::Run::Method::Simple;
+use MO::Run::MethodDefinition::Simple;
 
 has name => (
 	isa => "Str",

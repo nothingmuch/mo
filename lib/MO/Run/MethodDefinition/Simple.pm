@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-package MO::Run::Method::Simple;
+package MO::Run::MethodDefinition::Simple;
 use Moose;
 
 extends "MO::Compile::Method::Definition";
