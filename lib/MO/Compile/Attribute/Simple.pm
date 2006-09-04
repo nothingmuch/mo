@@ -3,7 +3,7 @@
 package MO::Compile::Attribute::Simple;
 use Moose;
 
-use MO::Run::Attribute::Simple;
+use MO::Compile::Attribute::Simple::Compiled;
 use MO::Compile::Field::Simple;
 use MO::Run::Method::Simple;
 
@@ -25,7 +25,7 @@ sub fields {
 sub compile {
 	my ( $self, %params ) = @_;
 
-	return MO::Run::Attribute::Simple->new(
+	return MO::Compile::Attribute::Simple::Compiled->new(
 		attribute => $self,
 		%params,
 	);

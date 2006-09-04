@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-package MO::Run::Attribute::Simple;
+package MO::Compile::Attribute::Simple::Compiled;
 use Moose;
 
 has attribute => (
