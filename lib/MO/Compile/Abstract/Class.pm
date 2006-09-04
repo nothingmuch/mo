@@ -13,19 +13,22 @@ requires "all_instance_methods";
 
 sub instance_interface {
 	my ( $self, @args ) = @_;
-
-	MO::Run::ResponderInterface::MethodTable->new(
-		methods => { map { $_->name => $_->definition } $self->all_instance_methods(@args) },
-	);
+	$self->_interface_from_methods( $self->all_instance_methods(@args) );
 }
 
 sub class_interface {
 	my ( $self, @args ) = @_;
+	$self->_interface_from_methods( $self->all_class_methods(@args) );
+}
+
+sub _interface_from_methods {
+	my ( $self, @methods ) = @_;
 
 	MO::Run::ResponderInterface::MethodTable->new(
-		methods => { map { $_->name => $_->definition } $self->all_class_methods(@args) },
+		methods => { map { $_->name => $_->definition } @methods },
 	);
 }
+
 
 __PACKAGE__;
 
