@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-package MO::Compile::Class::SI::Layout::Hash;
+package MO::Compile::Class::Layout::Hash;
 use Moose;
 
 use MO::Compile::Slot::HashElement;

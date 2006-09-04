@@ -5,7 +5,7 @@ use Moose;
 
 with "MO::Compile::Class";
 
-use MO::Compile::Class::SI::Layout::Hash;
+use MO::Compile::Class::Layout::Hash;
 
 has superclass => (
 	isa => "MO::Compile::Class::SI",
@@ -16,7 +16,7 @@ sub layout_class { }
 has layout_class => (
 	isa => "Str",
 	is  => "rw",
-	default => "MO::Compile::Class::SI::Layout::Hash",
+	default => "MO::Compile::Class::Layout::Hash",
 );
 
 sub superclasses {
