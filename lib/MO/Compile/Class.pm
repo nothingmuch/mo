@@ -36,7 +36,7 @@ has class_methods => (
 
 sub layout {
 	my $self = shift;
-	$self->_build_layout( map { $_->fields } $self->all_attributes);
+	$self->_build_layout( map { $_->fields($self) } $self->all_attributes);
 }
 
 sub _build_layout {
@@ -144,10 +144,10 @@ sub _attr_slots {
 	foreach my $attr ( $self->all_attributes ) {
 		if ( $attr == $the_attr ) {
 			$from = scalar @fields;
-			push @fields, $attr->fields;
+			push @fields, $attr->fields($self);
 			$to = $#fields;
 		} else {
-			push @fields, $attr->fields;
+			push @fields, $attr->fields($self);
 		}
 	}
 
