@@ -12,27 +12,27 @@ use ok 'MO::Run::Invocation::Method';
 use ok 'MO::Run::Responder::Invocant';
 
 my $base = MO::Compile::Class::SI->new(
-	regular_instance_methods => MO::Util::Collection->new(
+	regular_instance_methods => [
 		MO::Compile::Method::Simple->new(
 			name       => "foo",
 			definition => sub { "foo" },
 		),
-	),
-	attributes => MO::Util::Collection->new(
+	],
+	attributes => [
 		MO::Compile::Attribute::Simple->new(
 			name => "elk",
 		),
-	),
+	],
 );
 
 my $sub = MO::Compile::Class::SI->new(
 	superclass               => $base,
-	regular_instance_methods => MO::Util::Collection->new(
+	regular_instance_methods => [
 		MO::Compile::Method::Simple->new(
 			name       => "bar",
 			definition => sub { "bar" },
 		),
-	),
+	],
 );
 
 my $base_box = MO::Run::Responder::Invocant->new(
