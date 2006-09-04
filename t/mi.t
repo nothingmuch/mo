@@ -83,3 +83,45 @@ is_deeply(
 	[ sort qw/x y z color/ ],
 	"inherited accessors of deeper mi",
 );
+
+my $colorful_point3d_box = MO::Run::Responder::Invocant->new(
+	object              => $colorful_point3d,
+	responder_interface => $colorful_point3d->class_interface,
+);
+
+my $colorful_point3d_obj_box = $colorful_point3d_box->responder_interface->dispatch(
+	$colorful_point3d_box,
+	MO::Run::Invocation::Method->new(
+		name => "create_instance",
+		arguments => [
+			x => 1,
+			y => 2,
+			z => 3,
+			color => "shiny",
+		],
+	),
+)->();
+
+is(
+	$colorful_point3d_obj_box->responder_interface->dispatch(
+		$colorful_point3d_obj_box,
+		MO::Run::Invocation::Method->new( name => "color", arguments => [ ] ),
+	)->(),
+	"shiny",
+	"point.color",
+);
+
+$colorful_point3d_obj_box->responder_interface->dispatch(
+	$colorful_point3d_obj_box,
+	MO::Run::Invocation::Method->new( name => "color", arguments => [ "orange" ] ),
+)->(),
+
+is(
+	$colorful_point3d_obj_box->responder_interface->dispatch(
+		$colorful_point3d_obj_box,
+		MO::Run::Invocation::Method->new( name => "color", arguments => [ ] ),
+	)->(),
+	"orange",
+	"point.color",
+);
+
