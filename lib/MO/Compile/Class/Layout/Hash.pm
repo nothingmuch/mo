@@ -18,6 +18,15 @@ has fields => (
 	required   => 1,
 );
 
+sub BUILD {
+	my $self = shift;
+	foreach my $field ( $self->fields ) {
+		if ( $field->name =~ /:/ ) {
+			warn "The field name " . $field->name . " may conflict with private attribute namespacing";
+		}
+	}
+}
+
 sub slots {
 	my $self = shift;
 	map { $self->slot_class($_)->new( name => $_->name ) } $self->fields;
