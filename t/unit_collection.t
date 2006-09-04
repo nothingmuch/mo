@@ -61,3 +61,8 @@ is_deeply(
 	"same values, same name is not a conflict",
 );
 
+eval { MO::Util::Collection->new( $elk, $elk2 ) };
+
+ok( $@, "can't create collection with two items of the same name" );
+like( $@, qr/name conflict/, "the right error" );
+

@@ -40,8 +40,10 @@ sub items {
 sub add {
 	my ( $self, @items ) = @_;
 
+	my %seen;
 	croak "Can't insert @items: name conflict"
-		if $self->includes_any( map { $_->name } @items );
+		if $self->includes_any( map { $_->name } @items )
+		or scalar(@items) != scalar(grep { !$seen{$_->name}++ } @items);
 
 	foreach my $item ( @items ) {
 		$self->by_name->{ $item->name } = $item;
