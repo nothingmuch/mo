@@ -32,24 +32,31 @@ sub initialize {
 	};
 }
 
+sub accessor_body {
+	my ( $self, $slot ) = @_;
+
+	return sub {
+		my ( $instance, @args ) = @_;
+
+		if ( @args ) {
+			return $slot->set_value( $instance, @args );
+		} else {
+			return $slot->get_value( $instance );
+		}
+	};
+}
+
 sub methods {
 	my $self = shift;
 
 	my $slot = ( $self->slots )[0];
 
-	return {	
-		$_->name => MO::Run::Method::Simple->new(
-			body => sub {
-				my ( $instance, @args ) = @_;
-
-				if ( @args ) {
-					return $slot->set_value( $instance, @args );
-				} else {
-					return $slot->get_value( $instance );
-				}
-			},
-		),
-	};
+	return (
+		MO::Compile::Method::Simple->new(
+			name       => $self->name,
+			definition => $self->accessor_body($slot),
+		)
+	);
 }
 
 

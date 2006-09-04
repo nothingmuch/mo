@@ -28,10 +28,15 @@ sub slot_class {
 	"MO::Compile::Slot::Simple";
 }
 
+sub empty_instance_structure {
+	my $self = shift;
+	return {};
+}
+
 sub create_instance_structure {
 	my ( $self ) = @_;
-	my $instance = { };
-	$_->construct( $instance ) for $self->slots;;
+	my $instance = $self->empty_instance_structure;
+	$_->construct( $instance ) for $self->slots;
 	return $instance;
 }
 

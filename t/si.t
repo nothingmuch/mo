@@ -6,32 +6,34 @@ use warnings;
 use Test::More 'no_plan';
 
 use ok 'MO::Compile::Class::SI';
-use ok 'MO::Run::Method::Simple';
+use ok 'MO::Compile::Method::Simple';
 use ok 'MO::Compile::Attribute::Simple';
 use ok 'MO::Run::Invocation::Method';
 use ok 'MO::Run::Responder::Object';
 
 my $base = MO::Compile::Class::SI->new(
-	regular_instance_methods => {
-		foo => MO::Run::Method::Simple->new( body => sub { "foo" } ),
-	},
-	attributes => {
-		elk => MO::Compile::Attribute::Simple->new(
+	regular_instance_methods => MO::Util::Collection->new(
+		MO::Compile::Method::Simple->new(
+			name       => "foo",
+			definition => sub { "foo" },
+		),
+	),
+	attributes => MO::Util::Collection->new(
+		MO::Compile::Attribute::Simple->new(
 			name => "elk",
 		),
-	}
+	),
 );
 
 my $sub = MO::Compile::Class::SI->new(
 	superclass               => $base,
-	regular_instance_methods => {
-		bar => MO::Run::Method::Simple->new( body => sub { "bar" } ),
-	},
+	regular_instance_methods => MO::Util::Collection->new(
+		MO::Compile::Method::Simple->new(
+			name       => "bar",
+			definition => sub { "bar" },
+		),
+	),
 );
-
-can_ok( $base, "all_instance_methods" );
-
-can_ok( $base, "instance_interface" );
 
 my $base_box = MO::Run::Responder::Object->new(
 	object              => $base, # meh ;-)
