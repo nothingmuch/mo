@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-package MO::Compile::Layout::Simple;
+package MO::Compile::Class::SI::Layout;
 use Moose;
 
 use MO::Compile::Slot::Simple;

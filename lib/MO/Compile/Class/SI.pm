@@ -5,7 +5,7 @@ use Moose;
 
 use MO::Run::ResponderInterface::MethodTable;
 use MO::Run::Method::Simple;
-use MO::Compile::Layout::Simple;
+use MO::Compile::Class::SI::Layout;
 
 has superclass => (
 	isa => "MO::Compile::Class::SI",
@@ -38,7 +38,7 @@ sub layout {
 sub _build_layout {
 	my ( $self, @fields ) = @_;
 
-	MO::Compile::Layout::Simple->new(
+	MO::Compile::Class::SI::Layout->new(
 		class  => $self,
 		fields => \@fields,
 	);
