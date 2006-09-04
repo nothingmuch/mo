@@ -6,8 +6,8 @@ use Moose;
 use MO::Compile::Slot::HashElement;
 
 has class => (
-	isa => "MO::Compile::Class::SI",
-	is  => "ro",
+	does => "MO::Compile::Class",
+	is   => "ro",
 	required => 1,
 );
 
