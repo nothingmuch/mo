@@ -10,8 +10,8 @@ has attribute => (
 );
 
 has class => (
-	isa => "MO::Compile::Class::SI",
-	is  => "ro",
+	does => "MO::Compile::Class",
+	is   => "ro",
 );
 
 has slots => (
