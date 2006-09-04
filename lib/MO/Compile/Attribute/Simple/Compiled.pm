@@ -3,6 +3,8 @@
 package MO::Compile::Attribute::Simple::Compiled;
 use Moose;
 
+use MO::Compile::Method::Simple;
+
 has attribute => (
 	isa => "MO::Compile::Attribute::Simple",
 	is  => "ro",
