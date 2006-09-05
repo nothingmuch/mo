@@ -18,3 +18,7 @@
 
 - Perl::Generate based slot/accessor incest
 
+- Array based layouts
+
+- option for vtable based dispatch (as opposed to named)
+
