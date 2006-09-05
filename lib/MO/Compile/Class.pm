@@ -5,13 +5,22 @@ use Moose::Role;
 
 use MO::Util::Collection;
 use MO::Util::Collection::Merge;
+use MO::Util::Collection::Shadow;
 use MO::Util::Collection::Shadow::Accessor;
 use MO::Run::ResponderInterface::MethodTable;
 use MO::Run::MethodDefinition::Simple;
+use MO::Compile::Role;
 
 with "MO::Compile::Abstract::Class";
 
 requires "layout_class";
+
+has roles => (
+	isa => "ArrayRef",
+	is  => "rw",
+	auto_deref => 1,
+	default    => sub { [] },
+);
 
 has attributes => (
 	isa => "MO::Util::Collection",
@@ -48,18 +57,32 @@ sub _build_layout {
 	);
 }
 
+sub merged_roles {
+	my $self = shift;
+
+	MO::Compile::Role->new(
+		roles => [ $self->roles ],
+	);
+}
+
 sub get_all_using_mro_shadowing {
 	my ( $self, $accessor, @args ) = @_;
 
-	my $shadower = MO::Util::Collection::Shadow::Accessor->new( accessor => $accessor );
+	my $shadower = MO::Util::Collection::Shadow::Accessor->new( accessor => sub { $_[0]->$accessor(@args) } );
 
-	$shadower->shadow( $self->class_precedence_list );
+	MO::Util::Collection::Shadow->new->shadow(
+		MO::Util::Collection->new( $shadower->shadow( $self->class_precedence_list ) ),
+		MO::Util::Collection->new( $self->merged_roles->get_all_using_role_shadowing( $accessor, @args ) ),
+	)
 }
 
 sub get_all_using_mro {
 	my ( $self, $accessor, @args ) = @_;
 
-	map { $_->$accessor->items } reverse $self->class_precedence_list;
+	return (
+		(map { $_->$accessor(@args)->items } reverse $self->class_precedence_list),
+		$self->merged_roles->get_all_using_role_inheritence($accessor, @args),
+	);
 }
 
 sub all_class_methods {
@@ -109,8 +132,15 @@ sub all_instance_methods {
 sub all_attribute_instance_methods {
 	my $self = shift;
 
-	my @collections = map { $self->methods_of_attr( $_ ) } $self->all_attributes;
-	MO::Util::Collection::Merge->new->merge( @collections );
+	$self->get_all_using_mro_shadowing( sub {
+		my $ancestor = shift;
+
+		my @attrs = $ancestor->attributes->items;
+		my @method_collections = map { $self->methods_of_attribute($_) } @attrs;
+	
+		# per ancestor all the accessors are merged symmetrically	
+		MO::Util::Collection->new( MO::Util::Collection::Merge->new->merge( @method_collections ) );
+	});
 }
 
 sub all_compiled_attributes {
@@ -118,7 +148,7 @@ sub all_compiled_attributes {
 	map { $self->compile_attribute($_) } $self->all_attributes;
 }
 
-sub methods_of_attr {
+sub methods_of_attribute {
 	my ( $self, $attr ) = @_;
 
 	my $run_attr = $self->compile_attribute( $attr );
