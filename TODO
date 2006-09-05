@@ -1,0 +1,20 @@
+- add Compile::*::WithOrigin which delegates definition and name to an inner
+  method, but also knows where it came from
+
+- next/super etc -- methods must be MRO aware - this required a split into
+  ::Compiled much like attr is right now.
+
+- add Compile::Method::Accessor, which contains a ref to the attr on whose
+  behalf it was generated
+
+- add the notion of a caller and a stack to Invocation::Method, so that private
+  methods can be dispatched.
+
+- add an emitter that can take a collection of method interfaces and compile
+  them down to perl 5 packages. Points that must be considered:
+	- private methods must be wrapped with redispatchers
+	- foreign dispatch types must be dispatchable via ->meta calls, i guess
+	- use a comparative-merge approach so that foreign MROs can still work
+
+- Perl::Generate based slot/accessor incest
+
