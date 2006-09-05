@@ -5,7 +5,7 @@ use Moose;
 extends 'MO::Util::Collection::Shadow';
 
 has accessor => (
-	isa => "Str",
+	isa => "Str|CodeRef",
 	is  => "rw",
 	required => 1,
 );
