@@ -6,6 +6,8 @@ use Moose;
 sub shadow {
 	my ( $self, $head, @tail ) = @_;
 
+	return () unless $head;
+
 	my $head_collection = $self->collection( $head );
    
 	unless ( @tail ) {
