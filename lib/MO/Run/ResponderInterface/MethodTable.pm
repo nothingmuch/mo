@@ -11,14 +11,14 @@ has methods => (
 );
 
 sub method {
-	my ( $self, $name ) = @_;
-	$self->methods->{$name};
+	my ( $self, $inv ) = @_;
+	$self->methods->{$inv->name};
 }
 
 sub dispatch {
 	my ( $self, $responder, $inv ) = @_;
 	
-	if ( my $def = $self->method( $inv->name ) ) {
+	if ( my $def = $self->method( $inv ) ) {
 		my @args = ( $responder->object, $inv->arguments );
 		my $body = $def->body;
 		return sub { $body->( @args ) }; # goto?
