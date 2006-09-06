@@ -194,12 +194,15 @@ sub compile_attribute {
 
 	my @slots = $self->_attr_slots( $attr );
 
-	return $attr->compile( class => $self, slots => \@slots );
+	return $attr->compile(
+		class => $self,
+		slots => \@slots,
+	);
 }
 
 sub _attr_slots {
 	my ( $self, $the_attr ) = @_;
-	
+
 	my @fields;
 	my ( $from, $to );
 	foreach my $attached_attr ( $self->all_attributes ) {
