@@ -215,7 +215,8 @@ sub _attr_slots {
 		}
 	}
 
-	die unless defined $from and defined $to;
+	die "Can't compile slots for attribute " . $the_attr->name . ": it's not in the list of all attributes"
+		unless defined $from and defined $to;
 
 	( $self->layout->slots )[ $from .. $to ];
 }
