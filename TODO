@@ -1,6 +1,3 @@
-- add Compile::*::WithOrigin which delegates definition and name to an inner
-  method, but also knows where it came from
-
 - next/super etc -- methods must be MRO aware - this required a split into
   ::Compiled much like attr is right now.
 
