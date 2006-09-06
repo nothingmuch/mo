@@ -3,10 +3,13 @@
 package MO::Compile::Attribute::Simple;
 use Moose;
 
+with "MO::Compile::Attribute";
+
 use MO::Compile::Attribute::Simple::Compiled;
 use MO::Compile::Field::Simple;
 use MO::Run::MethodDefinition::Simple;
 
+sub name {}
 has name => (
 	isa => "Str",
 	is  => "rw",

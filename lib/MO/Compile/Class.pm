@@ -68,20 +68,50 @@ sub merged_roles {
 sub get_all_using_mro_shadowing {
 	my ( $self, $accessor, @args ) = @_;
 
-	my $shadower = MO::Util::Collection::Shadow::Accessor->new( accessor => sub { $_[0]->$accessor(@args) } );
+	my $attaching_accessor = $self->_attaching_accessor( $accessor, @args );
+
+	my $shadower = MO::Util::Collection::Shadow::Accessor->new(
+		accessor => $attaching_accessor,
+	);
 
 	MO::Util::Collection::Shadow->new->shadow(
 		MO::Util::Collection->new( $shadower->shadow( $self->class_precedence_list ) ),
-		MO::Util::Collection->new( $self->merged_roles->get_all_using_role_shadowing( $accessor, @args ) ),
+		MO::Util::Collection->new( $self->merged_roles->get_all_using_role_shadowing( $attaching_accessor ) ),
 	)
 }
 
 sub get_all_using_mro {
 	my ( $self, $accessor, @args ) = @_;
 
+	my $attaching_accessor = $self->_attaching_accessor( $accessor, @args );
+
 	return (
-		(map { $_->$accessor(@args)->items } reverse $self->class_precedence_list),
-		$self->merged_roles->get_all_using_role_inheritence($accessor, @args),
+		(map { $_->$attaching_accessor->items } reverse $self->class_precedence_list),
+		$self->merged_roles->get_all_using_role_inheritence($attaching_accessor),
+	);
+}
+
+sub _attaching_accessor {
+	my ( $self, $accessor, @args ) = @_;
+
+	return sub {
+		my $class_or_role = shift;
+		$self->_attach_collection(
+			$class_or_role,
+			$class_or_role->$accessor(@args)
+		);
+	};
+}
+
+sub _attach_collection {
+	my ( $self, $origin, $collection ) = @_;
+
+	MO::Util::Collection->new(
+		map {
+			$_->can("attach")
+				? $_->attach($origin)
+		   		:  $_
+		} $collection->items
 	);
 }
 
@@ -129,13 +159,16 @@ sub all_instance_methods {
 	);
 }
 
+# this is a bit of a hack, it applies shadowing to the methods, not the attrs
 sub all_attribute_instance_methods {
 	my $self = shift;
+
+	my $attaching_accessor = $self->_attaching_accessor("attributes");
 
 	$self->get_all_using_mro_shadowing( sub {
 		my $ancestor = shift;
 
-		my @attrs = $ancestor->attributes->items;
+		my @attrs = $ancestor->$attaching_accessor->items;
 		my @method_collections = map { $self->methods_of_attribute($_) } @attrs;
 	
 		# per ancestor all the accessors are merged symmetrically	
@@ -171,13 +204,13 @@ sub _attr_slots {
 	
 	my @fields;
 	my ( $from, $to );
-	foreach my $attr ( $self->all_attributes ) {
-		if ( $attr == $the_attr ) {
+	foreach my $attached_attr ( $self->all_attributes ) {
+		if ( $attached_attr->attribute == $the_attr->attribute ) {
 			$from = scalar @fields;
-			push @fields, $attr->fields($self);
+			push @fields, $attached_attr->fields($self);
 			$to = $#fields;
 		} else {
-			push @fields, $attr->fields($self);
+			push @fields, $attached_attr->fields($self);
 		}
 	}
 

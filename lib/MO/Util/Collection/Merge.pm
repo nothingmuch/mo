@@ -11,7 +11,7 @@ sub merge {
 
 	my %seen;
 
-	my @items = grep { !$seen{ refaddr($_) }++ } map { $_->items } @collections;
+	my @items = grep { !$seen{ $self->_item_uuid($_) }++ } map { $_->items } @collections;
 
 	%seen = ();
 
@@ -33,6 +33,12 @@ sub merge {
 
 		return @by_name{@names};
 	}
+}
+
+sub _item_uuid {
+	my ( $self, $item ) = @_;
+	$item = $item->attached_item while $item->does("MO::Compile::Attached");
+	refaddr($item);
 }
 
 sub merge_conflict {
