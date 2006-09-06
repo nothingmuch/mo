@@ -1,3 +1,5 @@
+- add a `compile` method to methods, much like attributes have right now
+
 - next/super etc -- methods must be MRO aware - this required a split into
   ::Compiled much like attr is right now.
 
