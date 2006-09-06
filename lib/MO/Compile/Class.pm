@@ -184,10 +184,8 @@ sub all_compiled_attributes {
 sub methods_of_attribute {
 	my ( $self, $attr ) = @_;
 
-	my $run_attr = $self->compile_attribute( $attr );
-
 	MO::Util::Collection->new(
-		$run_attr->methods
+		$self->compile_attribute( $attr )->methods,
 	);
 }
 
