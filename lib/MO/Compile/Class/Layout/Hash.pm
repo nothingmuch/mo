@@ -44,7 +44,7 @@ sub slot_name_for_field {
 	my ( $self, $field ) = @_;
 
 	$field->private
-		? sprintf('private:%s::%s', $field->class, $field->name)
+		? sprintf('private:%s::%s', $field->origin, $field->name)
 		: $field->name;
 }
 

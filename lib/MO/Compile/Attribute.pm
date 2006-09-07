@@ -15,8 +15,8 @@ sub attach {
 	my ( $self, $origin ) = @_;
 
 	MO::Compile::Attribute::Attached->new(
-		origin    => $origin,
 		attribute => $self,
+		origin => $origin,
 	);
 }
 

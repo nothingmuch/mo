@@ -30,13 +30,13 @@ has private => (
 );
 
 sub fields {
-	my ( $self, $class ) = @_;
+	my ( $self, %params ) = @_;
 
 	return MO::Compile::Field::Simple->new(
 		name      => $self->name,
 		private   => $self->private,
-		class     => $class,
 		attribute => $self,
+		%params,
 	);
 }
 

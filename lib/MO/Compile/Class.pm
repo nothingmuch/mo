@@ -20,7 +20,10 @@ use MO::Run::ResponderInterface::Multiplexed::ByCaller;
 
 use MO::Run::Responder::Invocant;
 
-with "MO::Compile::Abstract::Class";
+with qw/
+	MO::Compile::Abstract::Class
+	MO::Compile::Origin
+/;
 
 requires "layout_class";
 
@@ -199,11 +202,7 @@ sub _attach_collection {
 	my ( $self, $origin, $collection ) = @_;
 
 	MO::Util::Collection->new(
-		map {
-			$_->can("attach")
-				? $_->attach($origin)
-		   		:  $_
-		} $collection->items
+		map { $_->does("MO::Compile::Attached") ? $_ : $_->attach($origin) } $collection->items,
 	);
 }
 
@@ -304,7 +303,7 @@ sub _inflate_private_methods {
 	my ( $self, @methods ) = @_;
 
 	map {
-		$_->method->isa("MO::Compile::Method::Private")
+		$_->attached_item->isa("MO::Compile::Method::Private")
 			? $_
 			: $self->_inflate_private_method($_),
 	} @methods;
@@ -330,10 +329,9 @@ sub _merge_private_methods {
 sub _reattach {
 	my ( $self, $attached, $futz ) = @_;
 
-	(ref $attached)->new(
-		method => $futz->( $attached->attached_item, $attached ),
-		origin => $attached->origin,
-	);
+	my $inner = $futz->( $attached->attached_item, $attached );
+
+	$inner->attach( $attached->origin );
 }
 
 # this is a bit of a hack, it applies shadowing to the methods, not the attrs

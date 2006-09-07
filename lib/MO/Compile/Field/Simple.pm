@@ -15,7 +15,13 @@ has private => (
 	required => 1,
 );
 
-has class => (
+has origin => (
+	does => "MO::Compile::Origin",
+	is   => "ro",
+	required => 1,
+);
+
+has target => (
 	does => "MO::Compile::Class",
 	is   => "ro",
 	required => 1,

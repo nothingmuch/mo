@@ -3,7 +3,11 @@
 package MO::Compile::Attribute::Simple::Compiled;
 use Moose;
 
+with "MO::Compile::Attribute::Compiled";
+
 use MO::Compile::Method::Simple;
+
+BEGIN {
 
 has attribute => (
 	isa => "MO::Compile::Attribute::Simple",
@@ -11,11 +15,14 @@ has attribute => (
 	handles => [ qw/name accessor_name private/ ],
 );
 
+}
+
 has class => (
 	does => "MO::Compile::Class",
 	is   => "ro",
 );
 
+sub slots {}
 has slots => (
 	isa => "ArrayRef",
 	is  => "ro",
@@ -73,11 +80,9 @@ sub _generate_accessor_method {
 
 	my $slot = ( $self->slots )[0];
 
-	return (
-		MO::Compile::Method::Simple->new(
-			name       => $self->accessor_name,
-			definition => $self->accessor_body($slot),
-		)
+	return MO::Compile::Method::Simple->new(
+		name       => $self->accessor_name,
+		definition => $self->accessor_body($slot),
 	);
 }
 

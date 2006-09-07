@@ -3,7 +3,10 @@
 package MO::Compile::Role;
 use Moose;
 
-with "MO::Compile::Abstract::Role";
+with qw/
+	MO::Compile::Abstract::Role
+	MO::Compile::Origin
+/;
 
 use MO::Util::Collection;
 use MO::Util::Collection::Merge;

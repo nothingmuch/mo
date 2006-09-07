@@ -20,9 +20,23 @@ has attribute => (
 	does => "MO::Compile::Attribute",
 	is   => "ro",
 	required => 1,
-	handles  => [qw/name fields compile/],
+	handles  => [qw/name/],
 );
 
+}
+
+sub compile {
+	my ( $self, @args ) = @_;
+	$self->attribute->compile( @args )->attach( $self->origin );
+}
+
+sub fields {
+	my ( $self, $class ) = @_;
+
+	$self->attribute->fields(
+		target => $class,
+		origin => $self->origin,
+	);
 }
 
 sub attached_item {

@@ -70,4 +70,6 @@ my @slots = MO::Compile::Class::MI->new(
 )->layout->slots;
 
 is( @slots, 2, "two slots" );
-like( $_, qr/^private:.*?::x$/, "slot is correctly named" ) for (map { $_->name } @slots)[0, 1];
+my @slot_names = (map { $_->name } @slots)[0, 1];
+like( $_, qr/^private:.*?::x$/, "slot is correctly named" ) for @slot_names;
+cmp_ok( $slot_names[0], 'ne', $slot_names[1], "slot names are different" );
