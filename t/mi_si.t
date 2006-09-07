@@ -56,7 +56,7 @@ my $sub_obj_box = $sub_box->responder_interface->dispatch(
 )->();
 
 is(
-	$base->instance_interface->dispatch(
+	$base_obj_box->responder_interface->dispatch(
 		$base_obj_box,
 		MO::Run::Invocation::Method->new( name => "foo", arguments => [ ] ),
 	)->(),
@@ -65,7 +65,7 @@ is(
 );
 
 is(
-	$base->instance_interface->dispatch(
+	$base_obj_box->responder_interface->dispatch(
 		$base_obj_box,
 		MO::Run::Invocation::Method->new( name => "bar", arguments => [ ] ),
 	),
@@ -74,7 +74,7 @@ is(
 );
 
 is(
-	$base->instance_interface->dispatch(
+	$base_obj_box->responder_interface->dispatch(
 		$base_obj_box,
 		MO::Run::Invocation::Method->new( name => "elk", arguments => [ ] ),
 	)->(),
@@ -83,7 +83,7 @@ is(
 );
 
 is(
-	$base->instance_interface->dispatch(
+	$base_obj_box->responder_interface->dispatch(
 		$base_obj_box,
 		MO::Run::Invocation::Method->new( name => "elk", arguments => [ "val" ] ),
 	)->(),
@@ -92,7 +92,7 @@ is(
 );
 
 is(
-	$base->instance_interface->dispatch(
+	$base_obj_box->responder_interface->dispatch(
 		$base_obj_box,
 		MO::Run::Invocation::Method->new( name => "elk", arguments => [ ] ),
 	)->(),
@@ -101,7 +101,7 @@ is(
 );
 
 is(
-	$sub->instance_interface->dispatch(
+	$sub_obj_box->responder_interface->dispatch(
 		$sub_obj_box,
 		MO::Run::Invocation::Method->new( name => "foo", arguments => [ ] ),
 	)->(),
@@ -110,7 +110,7 @@ is(
 );
 
 is(
-	$sub->instance_interface->dispatch(
+	$sub_obj_box->responder_interface->dispatch(
 		$sub_obj_box,
 		MO::Run::Invocation::Method->new( name => "bar", arguments => [ ] ),
 	)->(),
