@@ -5,6 +5,7 @@ use Moose;
 
 with "MO::Compile::Abstract::Role";
 
+use MO::Util::Collection;
 use MO::Util::Collection::Merge;
 use MO::Util::Collection::Shadow;
 use MO::Compile::Role::Util::Merge;
@@ -24,7 +25,14 @@ has attributes => (
 	default => sub { MO::Util::Collection->new },
 );
 
-has regular_instance_methods => (
+has instance_methods => (
+	isa => "MO::Util::Collection",
+	is  => "rw",
+	coerce  => 1,
+	default => sub { MO::Util::Collection->new },
+);
+
+has "private_instance_methods" => ( # submethods
 	isa => "MO::Util::Collection",
 	is  => "rw",
 	coerce  => 1,
@@ -32,6 +40,13 @@ has regular_instance_methods => (
 );
 
 has class_methods => (
+	isa => "MO::Util::Collection",
+	is  => "rw",
+	coerce  => 1,
+	default => sub { MO::Util::Collection->new },
+);
+
+has "private_class_methods" => ( # submethods
 	isa => "MO::Util::Collection",
 	is  => "rw",
 	coerce  => 1,
@@ -73,7 +88,7 @@ sub get_all_using_role_inheritence {
 
 sub all_regular_instance_methods {
 	my $self = shift;
-	$self->get_all_using_role_shadowing( "regular_instance_methods" );
+	$self->get_all_using_role_shadowing( "instance_methods" );
 }
 
 sub all_regular_class_methods {

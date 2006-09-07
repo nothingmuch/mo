@@ -11,12 +11,12 @@ requires "all_class_methods";
 
 requires "all_instance_methods";
 
-sub instance_interface {
+sub _instance_interface {
 	my ( $self, @args ) = @_;
 	$self->_interface_from_methods( $self->all_instance_methods(@args) );
 }
 
-sub class_interface {
+sub _class_interface {
 	my ( $self, @args ) = @_;
 	$self->_interface_from_methods( $self->all_class_methods(@args) );
 }
@@ -28,7 +28,6 @@ sub _interface_from_methods {
 		methods => { map { $_->name => $_->definition } @methods },
 	);
 }
-
 
 __PACKAGE__;
 

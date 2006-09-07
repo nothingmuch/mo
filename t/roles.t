@@ -14,7 +14,7 @@ use ok 'MO::Compile::Attribute::Simple';
 	my $with_conflict = MO::Compile::Class::MI->new(
 		roles => [
 			MO::Compile::Role->new(
-				regular_instance_methods => [
+				instance_methods => [
 					MO::Compile::Method::Simple->new(
 						name       => "foo",
 						definition => sub { "foo" },
@@ -22,7 +22,7 @@ use ok 'MO::Compile::Attribute::Simple';
 				],
 			),
 			MO::Compile::Role->new(
-				regular_instance_methods => [
+				instance_methods => [
 					MO::Compile::Method::Simple->new(
 						name       => "foo",
 						definition => sub { "foo2" },
@@ -41,7 +41,7 @@ use ok 'MO::Compile::Attribute::Simple';
 	my $no_conflict = MO::Compile::Class::MI->new(
 		roles => [
 			MO::Compile::Role->new(
-				regular_instance_methods => [
+				instance_methods => [
 					MO::Compile::Method::Simple->new(
 						name       => "foo",
 						definition => sub { "foo" },
@@ -49,7 +49,7 @@ use ok 'MO::Compile::Attribute::Simple';
 				],
 			),
 			MO::Compile::Role->new(
-				regular_instance_methods => [
+				instance_methods => [
 					MO::Compile::Method::Simple->new(
 						name       => "foo2",
 						definition => sub { "foo2" },
@@ -72,7 +72,7 @@ use ok 'MO::Compile::Attribute::Simple';
 	my $shadowed = MO::Compile::Class::MI->new(
 		roles => [
 			MO::Compile::Role->new(
-				regular_instance_methods => [
+				instance_methods => [
 					MO::Compile::Method::Simple->new(
 						name       => "foo",
 						definition => sub { "foo" },
@@ -80,7 +80,7 @@ use ok 'MO::Compile::Attribute::Simple';
 				],
 				roles => [
 					MO::Compile::Role->new(
-						regular_instance_methods => [
+						instance_methods => [
 							MO::Compile::Method::Simple->new(
 								name       => "foo",
 								definition => sub { "foo2" },

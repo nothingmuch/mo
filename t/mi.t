@@ -15,7 +15,7 @@ my $base = MO::Compile::Class::MI->new();
 
 my $point = MO::Compile::Class::MI->new(
 	superclasses => [ $base ],
-	regular_instance_methods => [
+	instance_methods => [
 		MO::Compile::Method::Simple->new(
 			name       => "distance",
 			definition => sub {

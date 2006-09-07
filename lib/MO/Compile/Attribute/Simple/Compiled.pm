@@ -8,7 +8,7 @@ use MO::Compile::Method::Simple;
 has attribute => (
 	isa => "MO::Compile::Attribute::Simple",
 	is  => "ro",
-	handles => [ qw/name accessor_name/ ],
+	handles => [ qw/name accessor_name private/ ],
 );
 
 has class => (
@@ -51,6 +51,26 @@ sub accessor_body {
 sub methods {
 	my $self = shift;
 
+	unless ( $self->private ) {
+		return $self->_generate_accessor_method;
+	} else {
+		return;
+	}
+}
+
+sub private_methods {
+	my $self = shift;
+
+	if ( $self->private ) {
+		return $self->_generate_accessor_method;
+	} else {
+		return;
+	}
+}
+
+sub _generate_accessor_method {
+	my $self = shift;
+
 	my $slot = ( $self->slots )[0];
 
 	return (
@@ -60,7 +80,6 @@ sub methods {
 		)
 	);
 }
-
 
 
 __PACKAGE__;

@@ -3,13 +3,22 @@
 package MO::Compile::Class;
 use Moose::Role;
 
+use MO::Compile::Role;
+
 use MO::Util::Collection;
 use MO::Util::Collection::Merge;
 use MO::Util::Collection::Shadow;
 use MO::Util::Collection::Shadow::Accessor;
+
 use MO::Run::ResponderInterface::MethodTable;
+
+use MO::Compile::Method::Simple;
+use MO::Compile::Method::Private;
 use MO::Run::MethodDefinition::Simple;
-use MO::Compile::Role;
+
+use MO::Run::ResponderInterface::Multiplexed::ByCaller;
+
+use MO::Run::Responder::Invocant;
 
 with "MO::Compile::Abstract::Class";
 
@@ -29,7 +38,14 @@ has attributes => (
 	default => sub { MO::Util::Collection->new },
 );
 
-has regular_instance_methods => (
+has instance_methods => (
+	isa => "MO::Util::Collection",
+	is  => "rw",
+	coerce  => 1,
+	default => sub { MO::Util::Collection->new },
+);
+
+has "private_instance_methods" => ( # submethods
 	isa => "MO::Util::Collection",
 	is  => "rw",
 	coerce  => 1,
@@ -42,6 +58,82 @@ has class_methods => (
 	coerce  => 1,
 	default => sub { MO::Util::Collection->new },
 );
+
+has "private_class_methods" => ( # submethods
+	isa => "MO::Util::Collection",
+	is  => "rw",
+	coerce  => 1,
+	default => sub { MO::Util::Collection->new },
+);
+
+use tt;
+[% FOR foo IN ["instance","class"] %]
+sub [% foo %]_interface {
+	my ( $self, @args ) = @_;
+
+	my $public = $self->public_[% foo %]_interface(@args);
+	my $private = $self->private_[% foo %]_interfaces(@args);
+
+	if ( $private and scalar keys %$private ) {
+		$self->_combine_interfaces(
+			public  => $public,
+			private => $private,
+		);
+	} else {
+		return $public;
+	}
+}
+
+sub public_[% foo %]_interface {
+	my ( $self, @args ) = @_;
+	$self->MO::Compile::Abstract::Class::_[% foo %]_interface(@args);
+}
+
+sub private_[% foo %]_interfaces {
+	my ( $self, @args ) = @_;
+	$self->_private_methods_to_caller_interfaces($self->all_private_[% foo %]_methods(@args));
+}
+[% END %]
+no tt;
+
+sub _private_methods_to_caller_interfaces {
+	my ( $self, @methods ) = @_;
+
+	use Tie::RefHash;
+	tie my %interfaces, 'Tie::RefHash';
+
+	foreach my $attached_private_method ( @methods ) {
+		my $private_method = $attached_private_method->method;
+
+		my @visible_from = @{ $private_method->visible_from };
+
+		foreach my $visible ( @visible_from ) {
+			my $collection = $interfaces{$visible} ||= MO::Util::Collection->new;
+
+			# take apart the private method into normal a method, but keep it attached
+			$collection->add( $self->_reattach( $attached_private_method, sub {
+				my ( $private_method, $attached ) = @_;
+				return $private_method->method;
+			}) );
+		}
+	}
+
+	foreach my $i ( values %interfaces ) {
+		$i = $self->_interface_from_methods( $i->items );
+	}
+
+	return \%interfaces;
+}
+
+sub _combine_interfaces {
+	my ( $self, %params ) = @_;
+	my ( $public, $private ) = @params{qw/public private/};
+
+	MO::Run::ResponderInterface::Multiplexed::ByCaller->new(
+		fallback_interface    => $public,
+		per_caller_interfaces => $private,
+	);
+}
 
 sub layout {
 	my $self = shift;
@@ -115,6 +207,15 @@ sub _attach_collection {
 	);
 }
 
+sub all_instance_methods {
+	my $self = shift;
+
+	return (
+		$self->all_attribute_instance_methods,
+		$self->all_regular_instance_methods,
+	);
+}
+
 sub all_class_methods {
 	my $self = shift;
 	return (
@@ -123,9 +224,27 @@ sub all_class_methods {
 	);
 }
 
+sub all_private_instance_methods {
+	my $self = shift;
+
+	return $self->_merge_private_methods(
+		$self->all_attribute_private_instance_methods,
+		$self->all_regular_private_instance_methods,
+	);
+}
+
+sub all_private_class_methods {
+	my $self = shift;
+
+	return $self->_merge_private_methods(
+		$self->all_regular_private_class_methods,
+		$self->special_private_class_methods,
+	);
+}
+
 sub all_regular_instance_methods {
 	my $self = shift;
-	$self->get_all_using_mro_shadowing( "regular_instance_methods" );
+	$self->get_all_using_mro_shadowing( "instance_methods" );
 }
 
 sub all_regular_class_methods {
@@ -133,9 +252,25 @@ sub all_regular_class_methods {
 	$self->get_all_using_mro_shadowing( "class_methods" )
 }
 
+sub all_regular_private_instance_methods {
+	my $self = shift;
+
+	$self->_process_private_methods(
+		$self->get_all_using_mro( "private_instance_methods" ),
+	);
+}
+
+sub all_regular_private_class_methods {
+	my $self = shift;
+
+	$self->_process_private_methods(
+		$self->get_all_using_mro( "private_class_methods" ),
+	);
+}
+
 sub all_attributes_shadowed {
 	my $self = shift;
-	$self->get_all_using_mro_shadowed( "attributes" );
+	$self->get_all_using_mro_shadowing( "attributes" );
 }
 
 sub all_attributes {
@@ -150,12 +285,54 @@ sub special_class_methods {
 	);
 }
 
-sub all_instance_methods {
+sub special_private_class_methods {
 	my $self = shift;
+	return ();
+}
 
-	return (
-		$self->all_attribute_instance_methods,
-		$self->all_regular_instance_methods,
+sub _process_private_methods {
+	my ( $self, @pre_methods ) = @_;
+
+	# all are attached, private, not mixed
+	my @methods = $self->_inflate_private_methods(@pre_methods);
+
+	$self->_merge_private_methods( @methods );
+}
+
+# make private methods who don't have visible_from specified inflate into submethods
+sub _inflate_private_methods {
+	my ( $self, @methods ) = @_;
+
+	map {
+		$_->method->isa("MO::Compile::Method::Private")
+			? $_
+			: $self->_inflate_private_method($_),
+	} @methods;
+}
+
+sub _inflate_private_method {
+	my ( $self, $method ) = @_;
+
+	$self->_reattach($method, sub {
+		my ( $method, $attached ) = @_;
+		MO::Compile::Method::Private->new(
+			method       => $method,
+			visible_from => [ $attached->origin ],
+		);
+	});
+}
+
+sub _merge_private_methods {
+	my ( $self, @methods ) = @_;
+	@methods;
+}
+
+sub _reattach {
+	my ( $self, $attached, $futz ) = @_;
+
+	(ref $attached)->new(
+		method => $futz->( $attached->attached_item, $attached ),
+		origin => $attached->origin,
 	);
 }
 
@@ -176,6 +353,16 @@ sub all_attribute_instance_methods {
 	});
 }
 
+sub all_attribute_private_instance_methods {
+	my $self = shift;
+
+	my @attrs = $self->all_attributes;
+
+	$self->_process_private_methods(
+		map { $self->private_methods_of_attribute($_)->items } @attrs,
+	);
+}
+
 sub all_compiled_attributes {
 	my $self = shift;
 	map { $self->compile_attribute($_) } $self->all_attributes;
@@ -188,6 +375,15 @@ sub methods_of_attribute {
 		$self->compile_attribute( $attr )->methods,
 	);
 }
+
+sub private_methods_of_attribute {
+	my ( $self, $attr ) = @_;
+
+	MO::Util::Collection->new(
+		$self->compile_attribute( $attr )->private_methods,
+	);
+}
+
 
 sub compile_attribute {
 	my ( $self, $attr ) = @_;

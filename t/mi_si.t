@@ -12,7 +12,7 @@ use ok 'MO::Run::Invocation::Method';
 use ok 'MO::Run::Responder::Invocant';
 
 my $base = MO::Compile::Class::MI->new(
-	regular_instance_methods => [
+	instance_methods => [
 		MO::Compile::Method::Simple->new(
 			name       => "foo",
 			definition => sub { "foo" },
@@ -27,7 +27,7 @@ my $base = MO::Compile::Class::MI->new(
 
 my $sub = MO::Compile::Class::MI->new(
 	superclasses             => [ $base ],
-	regular_instance_methods => [
+	instance_methods => [
 		MO::Compile::Method::Simple->new(
 			name       => "bar",
 			definition => sub { "bar" },
