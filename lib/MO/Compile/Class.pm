@@ -434,7 +434,7 @@ sub constructor_method {
 				for @compiled_attributes;
 
 				MO::Run::Responder::Invocant->new(
-					object              => $object,
+					invocant            => $object,
 					responder_interface => $instance_interface,
 				);
 			}

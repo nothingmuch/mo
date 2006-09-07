@@ -48,9 +48,9 @@ sub accessor_body {
 		my ( $instance, @args ) = @_;
 
 		if ( @args ) {
-			return $slot->set_value( $instance, @args );
+			return $slot->set_value( $instance->invocant, @args );
 		} else {
-			return $slot->get_value( $instance );
+			return $slot->get_value( $instance->invocant );
 		}
 	};
 }

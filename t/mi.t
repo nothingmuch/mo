@@ -85,7 +85,7 @@ is_deeply(
 );
 
 my $colorful_point3d_box = MO::Run::Responder::Invocant->new(
-	object              => $colorful_point3d,
+	invocant            => $colorful_point3d,
 	responder_interface => $colorful_point3d->class_interface,
 );
 

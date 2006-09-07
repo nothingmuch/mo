@@ -31,7 +31,7 @@ my $sub = MO::Compile::Class::MI->new(
 
 
 my $sub_box = MO::Run::Responder::Invocant->new(
-	object              => $sub, # meh ;-)
+	invocant            => $sub,
 	responder_interface => $sub->class_interface,
 );
 

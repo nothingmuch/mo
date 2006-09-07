@@ -19,7 +19,7 @@ sub dispatch {
 	my ( $self, $responder, $inv ) = @_;
 	
 	if ( my $def = $self->method( $inv ) ) {
-		my @args = ( $responder->object, $inv->arguments );
+		my @args = ( $responder, $inv->arguments );
 		my $body = $def->body;
 		return sub { $body->( @args ) }; # goto?
 	}

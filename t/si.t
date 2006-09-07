@@ -36,7 +36,7 @@ my $sub = MO::Compile::Class::SI->new(
 );
 
 my $base_box = MO::Run::Responder::Invocant->new(
-	object              => $base, # meh ;-)
+	invocant            => $base,
 	responder_interface => $base->class_interface,
 );
 
@@ -46,7 +46,7 @@ my $base_obj_box = $base_box->responder_interface->dispatch(
 )->();
 
 my $sub_box = MO::Run::Responder::Invocant->new(
-	object              => $sub, # meh ;-)
+	invocant            => $sub,
 	responder_interface => $sub->class_interface,
 );
 

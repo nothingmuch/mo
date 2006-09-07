@@ -5,7 +5,7 @@ use Moose;
 
 with "MO::Run::Abstract::Responder";
 
-has object => (
+has invocant => (
 	isa => "Any",
 	is  => "rw",
 );

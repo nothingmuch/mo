@@ -35,7 +35,7 @@ my $i = MO::Run::ResponderInterface::MethodTable->new(
 		foo => MO::Run::MethodDefinition::Simple->new(
 			body => sub {
 				my ( $self, @args ) = @_;
-				return "moose: $self @args";
+				return "moose: " . $self->invocant . " @args";
 			},
 		),
 	},
@@ -44,7 +44,7 @@ my $i = MO::Run::ResponderInterface::MethodTable->new(
 my $obj = {};
 
 my $obj_box = MO::Run::Responder::Invocant->new(
-	object              => $obj,
+	invocant            => "<The Invocant>",
 	responder_interface => $i,
 );
 
@@ -62,7 +62,7 @@ ok( $thunk, "dispatch yielded a thunk" );
 
 is( ref($thunk), "CODE", "thunk is a code ref" );
 
-like( $thunk->(), qr/^moose: HASH\((?i:0x[a-f0-9]+)\) bar$/, "thunk evaluates correctly" );
+like( $thunk->(), qr/^moose: <The Invocant> bar$/, "thunk evaluates correctly" );
 
 ok(
 	!$obj_box->responder_interface->dispatch(
