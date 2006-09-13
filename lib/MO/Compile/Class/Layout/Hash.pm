@@ -29,7 +29,12 @@ sub BUILD {
 
 sub slots {
 	my $self = shift;
-	map { $self->slot_for_field($_) } $self->fields;
+	$self->slots_for_fields( $self->fields );
+}
+
+sub slots_for_fields {
+	my ( $self, @fields ) = @_;
+	map { $self->slot_for_field($_) } @fields;
 }
 
 sub slot_for_field {

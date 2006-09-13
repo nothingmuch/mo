@@ -397,22 +397,7 @@ sub compile_attribute {
 sub _attr_slots {
 	my ( $self, $the_attr ) = @_;
 
-	my @fields;
-	my ( $from, $to );
-	foreach my $attached_attr ( $self->all_attributes ) {
-		if ( $attached_attr->attribute == $the_attr->attribute ) {
-			$from = scalar @fields;
-			push @fields, $attached_attr->fields($self);
-			$to = $#fields;
-		} else {
-			push @fields, $attached_attr->fields($self);
-		}
-	}
-
-	die "Can't compile slots for attribute " . $the_attr->name . ": it's not in the list of all attributes"
-		unless defined $from and defined $to;
-
-	( $self->layout->slots )[ $from .. $to ];
+	$self->layout->slots_for_fields( $the_attr->fields($self) );
 }
 
 sub constructor_method {
