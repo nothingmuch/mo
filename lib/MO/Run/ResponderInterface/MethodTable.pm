@@ -8,6 +8,7 @@ with "MO::Run::Abstract::ResponderInterface";
 has methods => (
 	isa => "HashRef",
 	is  => "rw",
+	required => 1,
 );
 
 sub method {

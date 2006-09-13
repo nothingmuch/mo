@@ -57,51 +57,59 @@ has "private_class_methods" => ( # submethods
 );
 
 sub get_all_using_role_shadowing {
-	my ( $self, $accessor, @args ) = @_;
+	my ( $self, $target, $accessor, @args ) = @_;
 
 	MO::Util::Collection::Shadow->new->shadow(
 		$self->$accessor( @args ),
-		$self->get_merged_parent_collections($accessor, @args),
+		$self->get_merged_parent_collections( $target, $accessor, @args ),
 	),
 }
 
 sub get_collection_using_role_shadowing {
 	my ( $self, @args ) = @_;
-	MO::Util::Collection->new( $self->get_all_using_role_shadowing( @args ) );
+	MO::Util::Collection->new( $self->get_all_using_role_shadowing(@args) );
 }
 
 sub get_merged_parent_collections {
-	my ( $self, $accessor, @args ) = @_;
+	my ( $self, $target, $accessor, @args ) = @_;
 
-	my @collections = map { $_->get_collection_using_role_shadowing($accessor, @args) } $self->roles;
+	my @collections = map { $_->get_collection_using_role_shadowing( $target, $accessor, @args ) } $self->get_parent_roles($target, @args);
 	
 	return MO::Util::Collection->new(
 		MO::Compile::Role::Util::Merge->new->merge( @collections )
 	);
 }
 
+sub get_parent_roles {
+	my ( $self, $target, @args ) = @_;
+	$self->roles;
+}
+
 sub get_all_using_role_inheritence {
-	my ( $self, $accessor, @args ) = @_;
+	my ( $self, $target, $accessor, @args ) = @_;
 
 	return (
-		( map { $_->get_all_using_role_inheritence($accessor, @args) } $self->roles ),
+		( map { $_->get_all_using_role_inheritence( $target, $accessor, @args ) } $self->roles ),
 		$self->$accessor( @args )->items,
 	);
 }
 
+# FIXME
+# these should go away?
+
 sub all_regular_instance_methods {
 	my $self = shift;
-	$self->get_all_using_role_shadowing( "instance_methods" );
+	$self->get_all_using_role_shadowing( $self, "instance_methods" );
 }
 
 sub all_regular_class_methods {
 	my $self = shift;
-	$self->get_all_using_role_shadowing( "class_methods" )
+	$self->get_all_using_role_shadowing( $self, "class_methods" )
 }
 
 sub all_attributes {
 	my $self = shift;
-	$self->get_all_using_role_inheritence( "attributes" );
+	$self->get_all_using_role_inheritence( $self, "attributes" );
 }
 
 __PACKAGE__;

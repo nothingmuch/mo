@@ -10,13 +10,13 @@ use MO::Util::Collection::Merge;
 use MO::Util::Collection::Shadow;
 use MO::Util::Collection::Shadow::Accessor;
 
-use MO::Run::ResponderInterface::MethodTable;
-
 use MO::Compile::Method::Simple;
 use MO::Compile::Method::Private;
 use MO::Run::MethodDefinition::Simple;
 
+use MO::Run::ResponderInterface::MethodTable;
 use MO::Run::ResponderInterface::Multiplexed::ByCaller;
+use MO::Run::ResponderInterface::Multiplexed::AttributeGrammar;
 
 use MO::Run::Responder::Invocant;
 
@@ -28,6 +28,13 @@ with qw/
 requires "layout_class";
 
 has roles => (
+	isa => "ArrayRef",
+	is  => "rw",
+	auto_deref => 1,
+	default    => sub { [] },
+);
+
+has "attribute_grammars" => (
 	isa => "ArrayRef",
 	is  => "rw",
 	auto_deref => 1,
@@ -74,17 +81,15 @@ use tt;
 sub [% foo %]_interface {
 	my ( $self, @args ) = @_;
 
-	my $public = $self->public_[% foo %]_interface(@args);
+	my $public  = $self->public_[% foo %]_interface(@args);
 	my $private = $self->private_[% foo %]_interfaces(@args);
+	my $ag      = $self->attribute_grammar_[% foo %]_interfaces(@args);
 
-	if ( $private and scalar keys %$private ) {
-		$self->_combine_interfaces(
-			public  => $public,
-			private => $private,
-		);
-	} else {
-		return $public;
-	}
+	return $self->_combine_interfaces(
+		public             => $public,
+		private            => $private,
+		attribute_grammars => $ag,
+	);
 }
 
 sub public_[% foo %]_interface {
@@ -94,13 +99,51 @@ sub public_[% foo %]_interface {
 
 sub private_[% foo %]_interfaces {
 	my ( $self, @args ) = @_;
-	$self->_private_methods_to_caller_interfaces($self->all_private_[% foo %]_methods(@args));
+	$self->_private_methods_to_caller_interfaces(
+		$self->all_private_[% foo %]_methods(@args),
+	),
 }
-[% END %]
+
+[% END %];
 no tt;
+
+sub attribute_grammar_class_interfaces {
+	my ( $self, @args ) = @_;
+	return;
+}
+
+sub attribute_grammar_instance_interfaces {
+	my ( $self, @args ) = @_;
+
+	if ( my @ag = $self->attribute_grammars ) {
+		my %interfaces;
+
+		foreach my $key (qw/child root parent/) {
+			use Tie::RefHash;
+			tie my %hash, 'Tie::RefHash';
+			$interfaces{$key} = \%hash;
+		}
+
+		foreach my $ag_instance ( @ag ) {
+			my $ag = $ag_instance->attribute_grammar;
+			my $sub_interface = $self->attribute_grammar_interface( $ag_instance, @args );
+			$interfaces{$_}{$ag} = $sub_interface->{$_} for qw/child root parent/;
+		}
+
+		return \%interfaces;
+	} else {
+		return;
+	}
+}
+
+sub attribute_grammar_interface {
+	my ( $self, $ag, @args ) = @_;
+	$ag->interface( $self, @args );
+}
 
 sub _private_methods_to_caller_interfaces {
 	my ( $self, @methods ) = @_;
+	return unless @methods;
 
 	use Tie::RefHash;
 	tie my %interfaces, 'Tie::RefHash';
@@ -130,12 +173,25 @@ sub _private_methods_to_caller_interfaces {
 
 sub _combine_interfaces {
 	my ( $self, %params ) = @_;
-	my ( $public, $private ) = @params{qw/public private/};
+	my ( $public, $private, $attribute_grammars ) = @params{qw/public private attribute_grammars/};
 
-	MO::Run::ResponderInterface::Multiplexed::ByCaller->new(
-		fallback_interface    => $public,
-		per_caller_interfaces => $private,
-	);
+	my $interface = $public;
+
+	if ( $private ) {
+		$interface = MO::Run::ResponderInterface::Multiplexed::ByCaller->new(
+			fallback_interface    => $interface,
+			per_caller_interfaces => $private,
+		);
+	}
+
+	if ( $attribute_grammars ) {
+		$interface = MO::Run::ResponderInterface::Multiplexed::AttributeGrammar->new(
+			fallback_interface => $interface,
+			%$attribute_grammars,
+		);
+	}
+
+	return $interface;
 }
 
 sub layout {
@@ -161,7 +217,7 @@ sub merged_roles {
 }
 
 sub get_all_using_mro_shadowing {
-	my ( $self, $accessor, @args ) = @_;
+	my ( $self, $target, $accessor, @args ) = @_;
 
 	my $attaching_accessor = $self->_attaching_accessor( $accessor, @args );
 
@@ -171,18 +227,18 @@ sub get_all_using_mro_shadowing {
 
 	MO::Util::Collection::Shadow->new->shadow(
 		MO::Util::Collection->new( $shadower->shadow( $self->class_precedence_list ) ),
-		MO::Util::Collection->new( $self->merged_roles->get_all_using_role_shadowing( $attaching_accessor ) ),
+		MO::Util::Collection->new( $self->merged_roles->get_all_using_role_shadowing( $target, $attaching_accessor ) ),
 	)
 }
 
 sub get_all_using_mro {
-	my ( $self, $accessor, @args ) = @_;
+	my ( $self, $target, $accessor, @args ) = @_;
 
 	my $attaching_accessor = $self->_attaching_accessor( $accessor, @args );
 
 	return (
 		(map { $_->$attaching_accessor->items } reverse $self->class_precedence_list),
-		$self->merged_roles->get_all_using_role_inheritence($attaching_accessor),
+		$self->merged_roles->get_all_using_role_inheritence($target, $attaching_accessor),
 	);
 }
 
@@ -243,19 +299,19 @@ sub all_private_class_methods {
 
 sub all_regular_instance_methods {
 	my $self = shift;
-	$self->get_all_using_mro_shadowing( "instance_methods" );
+	$self->get_all_using_mro_shadowing( $self, "instance_methods" );
 }
 
 sub all_regular_class_methods {
 	my $self = shift;
-	$self->get_all_using_mro_shadowing( "class_methods" )
+	$self->get_all_using_mro_shadowing( $self, "class_methods" )
 }
 
 sub all_regular_private_instance_methods {
 	my $self = shift;
 
 	$self->_process_private_methods(
-		$self->get_all_using_mro( "private_instance_methods" ),
+		$self->get_all_using_mro( $self, "private_instance_methods" ),
 	);
 }
 
@@ -263,18 +319,18 @@ sub all_regular_private_class_methods {
 	my $self = shift;
 
 	$self->_process_private_methods(
-		$self->get_all_using_mro( "private_class_methods" ),
+		$self->get_all_using_mro( $self, "private_class_methods" ),
 	);
 }
 
 sub all_attributes_shadowed {
 	my $self = shift;
-	$self->get_all_using_mro_shadowing( "attributes" );
+	$self->get_all_using_mro_shadowing( $self, "attributes" );
 }
 
 sub all_attributes {
 	my $self = shift;
-	$self->get_all_using_mro( "attributes" );
+	$self->get_all_using_mro( $self, "attributes" );
 }
 
 sub special_class_methods {
@@ -340,7 +396,7 @@ sub all_attribute_instance_methods {
 
 	my $attaching_accessor = $self->_attaching_accessor("attributes");
 
-	$self->get_all_using_mro_shadowing( sub {
+	$self->get_all_using_mro_shadowing( $self, sub {
 		my $ancestor = shift;
 
 		my @attrs = $ancestor->$attaching_accessor->items;
@@ -416,7 +472,7 @@ sub constructor_method {
 				my $object = $layout->create_instance_structure;
 
 				$_->initialize( $object, @params )
-				for @compiled_attributes;
+					for @compiled_attributes;
 
 				MO::Run::Responder::Invocant->new(
 					invocant            => $object,
