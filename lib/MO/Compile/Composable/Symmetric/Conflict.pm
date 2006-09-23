@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-package MO::Compile::Role::Conflict;
+package MO::Compile::Composable::Symmetric::Conflict;
 use Moose;
 
 has name => (

@@ -34,7 +34,7 @@ use ok 'MO::Compile::Attribute::Simple';
 
 	my @methods = $with_conflict->all_instance_methods;
 	is( @methods, 1, "one method" );
-	isa_ok( $methods[0], "MO::Compile::Role::Conflict" );
+	isa_ok( $methods[0], "MO::Compile::Composable::Symmetric::Conflict" );
 }
 
 {
@@ -246,7 +246,7 @@ use ok 'MO::Compile::Attribute::Simple';
 
 	my @methods = $with_conflict->all_instance_methods;
 	is( @methods, 1, "one method" );
-	isa_ok( $methods[0], "MO::Compile::Role::Conflict" );
+	isa_ok( $methods[0], "MO::Compile::Composable::Symmetric::Conflict" );
 
 	my @attrs = $with_conflict->all_attributes;
 

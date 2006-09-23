@@ -5,12 +5,12 @@ use Moose;
 
 extends "MO::Util::Collection::Merge";
 
-use MO::Compile::Role::Conflict;
+use MO::Compile::Composable::Symmetric::Conflict;
 
 has conflict_class => (
 	isa => "Str",
 	is  => "rw",
-	default => "MO::Compile::Role::Conflict",
+	default => "MO::Compile::Composable::Symmetric::Conflict",
 );
 
 sub merge_conflict {
