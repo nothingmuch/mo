@@ -12,12 +12,11 @@ familiar with its compile-time/run-time split.
 =head1 COMPILE-TIME
 
 The class is the most significant object in the compile-time stack; it
-tries to model Perl 6's OO.
+tries to model Perl 6's classes.
 
 Specifically, L<MO::Compile::Class::MI> is a class model capable of
 multiple-inheritance and reuse behavior through roles and attribute
-grammars, as well as ancestors.  It supports both private and public
-methods and attributes.
+grammars. It supports both private and public methods and attributes.
 
 For example, the simple hierarchy:
 
@@ -55,6 +54,10 @@ declared/defined.
 Roles are like classes - they can contain class and instance methods and
 attributes, they have parent roles, and they are pointed to using the C<roles>
 attribute of C<Class::MI>.
+
+The fact that roles are composed differently is not directly appearant in their
+structure. This means that conflicts are not yet detected - this happens in the
+L</COMPILATION> phase.
 
 =head2 Attribute Grammars
 
@@ -101,6 +104,8 @@ optimized away in certain conditions, but generally looks like this:
 		has $.caller;
 	}
 
+And is implemented in L<MO::Run::Invocation::Method>.
+
 =head2 What is a responder
 
 A responder is a vague term. Anything that can "accept" invocations is a
@@ -123,6 +128,9 @@ arguments as a thunk.
 
 How a responder interface does its job is vaguely defined, but for performance
 reasons this should be a simple model, which can easily be inlined.
+
+A partial evaluator is likely the best strategy for static dispatch. This will
+be discussed in a future document.
 
 =head1 COMPILATION
 
