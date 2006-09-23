@@ -3,7 +3,10 @@
 package MO::Compile::AttributeGrammar::Instance;
 use Moose;
 
-extends "MO::Compile::Role";
+with qw/
+	MO::Compile::Origin
+	MO::Compile::Composable::Symmetric
+/;
 
 has inherited_attributes => (
 	isa => "MO::Util::Collection",
