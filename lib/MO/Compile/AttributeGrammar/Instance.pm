@@ -26,7 +26,7 @@ has bestowed_attributes => (
 	default => sub { MO::Util::Collection->new },
 );
 
-sub get_parent_roles {
+sub get_parent_ag_instances {
 	my ( $self, $class ) = @_;
 
 	my @ancestors = $self->attribute_grammar->ancestors;
@@ -49,15 +49,15 @@ sub get_parent_roles {
 sub interface {
 	my ( $self, $target, @args ) = @_;
 
-	my $synthesized = MO::Util::Collection->new( $self->get_all_using_role_shadowing( $target, "synthesized_attributes", @args ) );
-	my $inherited   = MO::Util::Collection->new( $self->get_all_using_role_shadowing( $target, "inherited_attributes",   @args ) );
+	my $synthesized = MO::Util::Collection->new( $self->get_all_using_symmetric_shadowing( $target, "get_parent_ag_instances", "synthesized_attributes", @args ) );
+	my $inherited   = MO::Util::Collection->new( $self->get_all_using_symmetric_shadowing( $target, "get_parent_ag_instances", "inherited_attributes",   @args ) );
 	my $root        = $self->attribute_grammar->root_attributes;
 
 	# The interfaces for each behavior a class with an AG instance can perform
 	my %interfaces = (
 		child  => [ MO::Util::Collection::Merge->new->merge( $synthesized, $inherited ) ],
 		root   => [ MO::Util::Collection::Shadow->new->shadow( $root, $synthesized ) ],
-		parent => [ $self->get_all_using_role_shadowing( $target, "bestowed_attributes", @args ) ],
+		parent => [ $self->get_all_using_symmetric_shadowing( $target, "get_parent_ag_instances", "bestowed_attributes", @args ) ],
 	);
 
 	for ( values %interfaces ) {
