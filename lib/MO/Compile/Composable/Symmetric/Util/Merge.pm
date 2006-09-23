@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-package MO::Compile::Role::Util::Merge;
+package MO::Compile::Composable::Symmetric::Util::Merge;
 use Moose;
 
 extends "MO::Util::Collection::Merge";

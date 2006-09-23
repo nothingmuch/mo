@@ -11,7 +11,7 @@ with qw/
 use MO::Util::Collection;
 use MO::Util::Collection::Merge;
 use MO::Util::Collection::Shadow;
-use MO::Compile::Role::Util::Merge;
+use MO::Compile::Composable::Symmetric::Util::Merge;
 
 sub roles {}
 has roles => (
@@ -76,7 +76,7 @@ sub get_symmetrically_merged_parent_collections {
 	my @collections = map { $_->get_collection_using_symmetric_shadowing( $target, $parents, $accessor, @args ) } $self->$parents($target, @args);
 	
 	return MO::Util::Collection->new(
-		MO::Compile::Role::Util::Merge->new->merge( @collections )
+		MO::Compile::Composable::Symmetric::Util::Merge->new->merge( @collections )
 	);
 }
 
