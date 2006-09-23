@@ -1,0 +1,239 @@
+=pod
+
+=head1 NAME
+
+MO::Overview - An overview of the MO experimental meta-object protocol.
+
+=head1 DESCRIPTION
+
+When you already know about the compile-time/run-time split in L<MO> this doc
+should let you in on the architechture.
+
+=head1 COMPILE-TIME
+
+The most significant object in the compile time stack, which tries to model
+Perl 6's OO, is the class.
+
+Specifically L<MO::Compile::Class::MI>, a multiple inheritence capable class
+model, capable of reusing behavior using roles and attribute grammars in
+addition to it's ancestors, supporting private and public methods and
+attributes.
+
+For example, the simple hierarchy:
+
+	class Point {
+		has $.x;
+		has $.y;
+
+		method is_higher_than ($other_point) {
+			return $.y > $other_point.y;
+		}
+	}
+
+	class Point::3D extends Point {
+		has $.z;
+	}
+
+Is modeled as an instance of C<Class::MI> for C<Point>, with the public
+attributes C<$.x> and C<$.y>, and the public instance method C<is_higher_than>.
+
+These objects have the various C<::Simple> variants. For example,
+C<MO::Compile::Method::Simple> can be constructed with just a definition and a
+name (in MO a definition is it's own object, and
+C<MO::Compile::Definition::Simple> is just a wrapper around a Perl 5 closure),
+and C<MO::Compile::Attribute::Simple> needs only it's name.
+
+Next, C<Point3d> is constructed, and the instance for C<Point> is places in
+it's list of ancestors. This class will contain just an instance of
+C<Attribute::Simple> for the C<$.z> attribute.
+
+This meta model relates very closely to the structure in which a class is
+declared/defined.
+
+=head2 Roles
+
+Roles are like classes - they can contain class and instance methods and
+attributes, they have parent roles, and they are pointed to using the C<roles>
+attribute of C<Class::MI>.
+
+=head2 Attribute Grammars
+
+Attribute grammars are a little like roles, but they extend to multiple
+classes. Every class can have any number of B<Attribute Grammar Instances>,
+which point to an attribute grammar meta object. Attribute grammars can inherit
+other attribute grammars, in a role like way.
+
+In fact, an instance of an attribute grammar, containing method definitions,
+uses the exact same composition rules as the role meta objects, as provided by
+C<MO::Compile::Composable::Symmetric>. The only difference is the way parents
+are fetched - this relates to the attribute grammar's inheritence rules.
+
+=head2 Compilation
+
+Getting this meta model actually running is a complicated step, and will be
+explained in the L</COMPILATION> section after the runtime is introduced.
+
+=head1 RUN-TIME
+
+The runtime meta model is very different than the compile time one.
+
+=head2 What is an invocation
+
+An invocation in MO is some sort of function call that depends on some
+responder interface (see below) to perform it's dispatch. For example, a method
+is an invocation which resolves polymorphically over some kind of invocant - a
+class or an instance.
+
+A method call in the runtime is an object that is designed to be easily
+optimizable away in certain conditions, but generally looks like this:
+
+	class MO::Run::Invocation::Method {
+
+		# the name of the method being called
+		has $.name;
+
+		# in Perl 6 this is a Capture, in Perl 5 a list
+		has $.arguments;
+
+		# this is currently a kludge since MO doesn't specify the call stack
+		# semantics, but *does* need a caller to dispatch private methods
+		has $.caller;
+	}
+
+=head2 What is a responder
+
+A responder is a vague term. Anything that can "accept" invocations is a
+responder.
+
+L<MO::Run::Responder::Invocant> is a boxed type, that contains the data
+structure of the invocant in one slot, and it's responder interface in the
+other.
+
+=head2 What is a responder interface
+
+A responder interface is an object that receives the responder and the
+invocation, and should the responder be able to accept that invocation, returns
+a thunk that the runtime can use to actually perform the invocation.
+
+For example, the L<MO::Run::ResponderInterface::MethodTable> contains a bunch
+of method definitions in a hash. It looks up C<$method.name> in the hash, and
+if a definition exists returns that definition bound with the invocant and the
+arguments as a thunk.
+
+How a responder interface does it's job is vaguely defined, but for performance
+reasons this should be a simple model, that can be easily inlined.
+
+=head1 COMPILATION
+
+To get to the run-time meta model from the compile-time meta model, several
+steps must be taken.
+
+The compilation process is purely functional, and hence may be memoized for as
+long as the meta objects remain constant (if they are  read only, then this is
+indefinitely). This concern is not addressed by MO as of yet, and hence
+compilation is fairly slow, due to repeated recalculation of certain
+intermediate values.
+
+Compilation starts at the class you would like to compile, as you ask it for
+the class and instance responder interfaces that it knows to create. This
+concept is specific to class based OO. Other meta objects may create responder
+interfaces in other ways. See the L</COOKBOOK> section for more info.
+
+=head2 Linearization
+
+The first aspect of compilation is being able to linearize the meta model
+according to the composition rules.
+
+For example, classes may be linearized into C3 order using the
+L<MO::Compile::Class::MI::MRO::C3>, or using Perl 5's depth first left to right
+order, etc.
+
+Meta objects which consume the L<MO::Compile::Composable::Symmetric> role, for
+example roles and attribute grammars, are composed symmetrically (within every
+level there is no precedence of the nodes).
+
+These ordering stragies may be used to implement shadowing and merging of sub
+elements. For example, getting the method set for a given class involves every
+class in the precedence list shadowing over it's predecessors. The lower level
+merging/shadowing is performed using L<MO::Util::Collection> as the data
+structure, and then using utility classes like L<MO::Util::Collection::Shadow>.
+
+A class will inspect it's precedence list first, and then the roles and
+attribute grammar instances.
+
+=head2 Attachment
+
+The first stage is enumerating all the sub objects (attributes and methods) and
+attaching them to their origin (an origin is the point in which an attribute is
+defined). Attributes are not attached to a class before this stage, and thus
+may be freely shared by several classes in their "pure" form.
+
+=head2 Layouts
+
+A layout defines the shape of the instance. It is computed by enumerating all
+the attributes of the class hierarchy, and asking them for all the fields which
+they need.
+
+A field can be marked as private or public. Public fields will be shared by
+attributes if they have the same name, wheras private ones will only be shared
+by attributes with the same origin class. Typically every attribute allocates
+one field, with the same name as itself.
+
+The layout then calculates the "shape" of the instance, an opaque notion. Right
+now only hashes are supported. The layout generate slot objects, which
+correspond in a 1:1 relationship to fields.
+
+=head2 Sub-item compilation
+
+Once all the items have been collected they are compiled with respect to a
+target class (the class we're compiling at the moment).
+
+Plain methods are simply compiled as is. Accessor methods collected from
+attributes, on the other hand, require the slots computed by the layout from
+the previous step. Every attribute will get the slots which correspond to the
+fields it published.
+
+Eventually the entire interface of callable methods is available, and can be
+used to construct a L<MO::Run::ResponderInterface::MethodTable>. Private
+methods are put in a responder interface that multiplexes based on the callers
+and falls back to the public interface. Attribute grammars are private to the
+attribute grammar, and hence are a little more complex and beyond the scope of
+this document.
+
+=head2 Future Directions
+
+In the short term future I hope to compile responder interfaces that can be
+easily translated in to native Perl 5 packages. More details will follow soon.
+
+=head1 BOOTSTRAPPING
+
+Should MO become the basis of Perl 6 it'll be self hosting.
+
+MO itself is implemented using classes and roles, without too much
+"heavyweight" features.
+
+Attribute grammars could assist with the emitter but are not strictly necessary
+to implement a meta model.
+
+That said, there should be no limitation for meta classes to be implemented
+using special responder interfaces, etc, as long as a bootstrapping strategy
+that can build up from the existing classes/roles model can be found.
+
+=head1 COOKBOOK
+
+This section is still TODO
+
+- Mock objects -- a responder interface that contains overrides, and falls back
+  to the original responder interface of the object it is mocking.
+
+- prototype objects -- the object is it's own responder interface (and
+  typically a method table)
+
+- mmd -- a new type of Invocation/Responder meta object pair, that encapsulate
+  multiple invocants.
+
+- python classes, perl 5 classes -- multiple MRO in the same runtime are very
+  simple - the class may freely choose it's own MRO, and the runtime doesn't
+  care about that.
+
+=cut
