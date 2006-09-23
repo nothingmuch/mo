@@ -6,18 +6,18 @@ MO::Overview - An overview of the MO experimental meta-object protocol.
 
 =head1 DESCRIPTION
 
-When you already know about the compile-time/run-time split in L<MO> this doc
-should let you in on the architechture.
+This document explains the architecture in L<MO> and assumes you are
+familiar with its compile-time/run-time split.
 
 =head1 COMPILE-TIME
 
-The most significant object in the compile time stack, which tries to model
-Perl 6's OO, is the class.
+The class is the most significant object in the compile-time stack; it
+tries to model Perl 6's OO.
 
-Specifically L<MO::Compile::Class::MI>, a multiple inheritence capable class
-model, capable of reusing behavior using roles and attribute grammars in
-addition to it's ancestors, supporting private and public methods and
-attributes.
+Specifically, L<MO::Compile::Class::MI> is a class model capable of
+multiple-inheritance and reuse behavior through roles and attribute
+grammars, as well as ancestors.  It supports both private and public
+methods and attributes.
 
 For example, the simple hierarchy:
 
@@ -34,17 +34,17 @@ For example, the simple hierarchy:
 		has $.z;
 	}
 
-Is modeled as an instance of C<Class::MI> for C<Point>, with the public
+is modeled as an instance of C<Class::MI> for C<Point>, with the public
 attributes C<$.x> and C<$.y>, and the public instance method C<is_higher_than>.
 
 These objects have the various C<::Simple> variants. For example,
 C<MO::Compile::Method::Simple> can be constructed with just a definition and a
-name (in MO a definition is it's own object, and
+name (in MO a definition is its own object, and
 C<MO::Compile::Definition::Simple> is just a wrapper around a Perl 5 closure),
-and C<MO::Compile::Attribute::Simple> needs only it's name.
+and C<MO::Compile::Attribute::Simple> needs only its name.
 
-Next, C<Point3d> is constructed, and the instance for C<Point> is places in
-it's list of ancestors. This class will contain just an instance of
+Next, C<Point3D> is constructed, and the instance for C<Point> is placed in
+its list of ancestors. This class will contain just an instance of
 C<Attribute::Simple> for the C<$.z> attribute.
 
 This meta model relates very closely to the structure in which a class is
@@ -61,12 +61,12 @@ attribute of C<Class::MI>.
 Attribute grammars are a little like roles, but they extend to multiple
 classes. Every class can have any number of B<Attribute Grammar Instances>,
 which point to an attribute grammar meta object. Attribute grammars can inherit
-other attribute grammars, in a role like way.
+other attribute grammars, in a role-like way.
 
 In fact, an instance of an attribute grammar, containing method definitions,
 uses the exact same composition rules as the role meta objects, as provided by
 C<MO::Compile::Composable::Symmetric>. The only difference is the way parents
-are fetched - this relates to the attribute grammar's inheritence rules.
+are fetched--this relates to the attribute grammar's inheritance rules.
 
 =head2 Compilation
 
@@ -80,12 +80,12 @@ The runtime meta model is very different than the compile time one.
 =head2 What is an invocation
 
 An invocation in MO is some sort of function call that depends on some
-responder interface (see below) to perform it's dispatch. For example, a method
-is an invocation which resolves polymorphically over some kind of invocant - a
+responder interface (see below) to perform its dispatch. For example, a method
+is an invocation which resolves polymorphically over some kind of invocant--a
 class or an instance.
 
 A method call in the runtime is an object that is designed to be easily
-optimizable away in certain conditions, but generally looks like this:
+optimized away in certain conditions, but generally looks like this:
 
 	class MO::Run::Invocation::Method {
 
@@ -95,8 +95,9 @@ optimizable away in certain conditions, but generally looks like this:
 		# in Perl 6 this is a Capture, in Perl 5 a list
 		has $.arguments;
 
-		# this is currently a kludge since MO doesn't specify the call stack
-		# semantics, but *does* need a caller to dispatch private methods
+		# this is currently a kludge since MO doesn't specify the call
+		# stack semantics, but *does* need a caller to dispatch
+		# private methods
 		has $.caller;
 	}
 
@@ -106,7 +107,7 @@ A responder is a vague term. Anything that can "accept" invocations is a
 responder.
 
 L<MO::Run::Responder::Invocant> is a boxed type, that contains the data
-structure of the invocant in one slot, and it's responder interface in the
+structure of the invocant in one slot, and its responder interface in the
 other.
 
 =head2 What is a responder interface
@@ -120,8 +121,8 @@ of method definitions in a hash. It looks up C<$method.name> in the hash, and
 if a definition exists returns that definition bound with the invocant and the
 arguments as a thunk.
 
-How a responder interface does it's job is vaguely defined, but for performance
-reasons this should be a simple model, that can be easily inlined.
+How a responder interface does its job is vaguely defined, but for performance
+reasons this should be a simple model, which can easily be inlined.
 
 =head1 COMPILATION
 
@@ -136,7 +137,7 @@ intermediate values.
 
 Compilation starts at the class you would like to compile, as you ask it for
 the class and instance responder interfaces that it knows to create. This
-concept is specific to class based OO. Other meta objects may create responder
+concept is specific to class-based OO. Other meta objects may create responder
 interfaces in other ways. See the L</COOKBOOK> section for more info.
 
 =head2 Linearization
@@ -152,13 +153,13 @@ Meta objects which consume the L<MO::Compile::Composable::Symmetric> role, for
 example roles and attribute grammars, are composed symmetrically (within every
 level there is no precedence of the nodes).
 
-These ordering stragies may be used to implement shadowing and merging of sub
+These ordering strategies may be used to implement shadowing and merging of sub
 elements. For example, getting the method set for a given class involves every
-class in the precedence list shadowing over it's predecessors. The lower level
+class in the precedence list shadowing over its predecessors. The lower level
 merging/shadowing is performed using L<MO::Util::Collection> as the data
 structure, and then using utility classes like L<MO::Util::Collection::Shadow>.
 
-A class will inspect it's precedence list first, and then the roles and
+A class will inspect its precedence list first, and then the roles and
 attribute grammar instances.
 
 =head2 Attachment
@@ -175,12 +176,12 @@ the attributes of the class hierarchy, and asking them for all the fields which
 they need.
 
 A field can be marked as private or public. Public fields will be shared by
-attributes if they have the same name, wheras private ones will only be shared
+attributes if they have the same name, whereas private ones will only be shared
 by attributes with the same origin class. Typically every attribute allocates
 one field, with the same name as itself.
 
 The layout then calculates the "shape" of the instance, an opaque notion. Right
-now only hashes are supported. The layout generate slot objects, which
+now only hashes are supported. The layout generates slot objects, which
 correspond in a 1:1 relationship to fields.
 
 =head2 Sub-item compilation
@@ -209,13 +210,13 @@ easily translated in to native Perl 5 packages. More details will follow soon.
 
 Should MO become the basis of Perl 6 it'll be self hosting.
 
-MO itself is implemented using classes and roles, without too much
+MO itself is implemented using classes and roles, without too many
 "heavyweight" features.
 
 Attribute grammars could assist with the emitter but are not strictly necessary
 to implement a meta model.
 
-That said, there should be no limitation for meta classes to be implemented
+That said, there should be no restriction against meta classes being implemented
 using special responder interfaces, etc, as long as a bootstrapping strategy
 that can build up from the existing classes/roles model can be found.
 
@@ -226,14 +227,14 @@ This section is still TODO
 - Mock objects -- a responder interface that contains overrides, and falls back
   to the original responder interface of the object it is mocking.
 
-- prototype objects -- the object is it's own responder interface (and
+- prototype objects -- the object is its own responder interface (and
   typically a method table)
 
-- mmd -- a new type of Invocation/Responder meta object pair, that encapsulate
+- mmd -- a new type of Invocation/Responder meta object pair, which encapsulates
   multiple invocants.
 
 - python classes, perl 5 classes -- multiple MRO in the same runtime are very
-  simple - the class may freely choose it's own MRO, and the runtime doesn't
+  simple--the class may freely choose its own MRO, and the runtime doesn't
   care about that.
 
 =cut
