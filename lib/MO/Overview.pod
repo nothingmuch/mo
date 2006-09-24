@@ -58,7 +58,7 @@ Roles are like classes - they can contain class and instance methods and
 attributes, they have parent roles, and they are pointed to using the C<roles>
 attribute of C<Class::MI>.
 
-The fact that roles are composed differently is not directly appearant in their
+The fact that roles are composed differently is not directly apparent in their
 structure. This means that conflicts are not yet detected - this happens in the
 L</COMPILATION> phase.
 
@@ -81,7 +81,7 @@ explained in the L</COMPILATION> section after the runtime is introduced.
 
 =head1 RUN-TIME
 
-The runtime meta model is very different than the compile time one.
+The runtime meta model is very different from the compile time one.
 
 =head2 What is an invocation
 
@@ -227,7 +227,7 @@ MO itself is implemented using classes and roles, without too many
 Attribute grammars could assist with the emitter but are not strictly necessary
 to implement a meta model.
 
-That said, there should be no restriction against meta classes being implemented
+That said, there should be no restriction on meta classes being implemented
 using special responder interfaces, etc, as long as a bootstrapping strategy
 that can build up from the existing classes/roles model can be found.
 
