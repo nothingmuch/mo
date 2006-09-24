@@ -6,9 +6,6 @@
 - add Compile::Method::Accessor, which contains a ref to the attr on whose
   behalf it was generated
 
-- add the notion of a caller and a stack to Invocation::Method, so that private
-  methods can be dispatched.
-
 - add an emitter that can take a collection of method interfaces and compile
   them down to perl 5 packages. Points that must be considered:
 	- private methods must be wrapped with redispatchers

@@ -33,8 +33,11 @@ For example, the simple hierarchy:
 		has $.z;
 	}
 
-is modeled as an instance of C<Class::MI> for C<Point>, with the public
-attributes C<$.x> and C<$.y>, and the public instance method C<is_higher_than>.
+is modeled by two instances of C<Class::MI>, one for C<Point> and one for
+C<Point::3D>.
+
+The instance of C<Point> is constructed with the public attributes C<$.x> and
+C<$.y>, and the public instance method C<is_higher_than>.
 
 These objects have the various C<::Simple> variants. For example,
 C<MO::Compile::Method::Simple> can be constructed with just a definition and a
