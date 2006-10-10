@@ -3,6 +3,9 @@
 package MO::Compile::Field::Simple;
 use Moose;
 
+with "MO::Compile::Field";
+
+sub name {}
 has name => (
 	isa => "Str",
 	is  => "ro",

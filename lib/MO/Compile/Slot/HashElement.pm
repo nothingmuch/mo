@@ -3,6 +3,8 @@
 package MO::Compile::Slot::HashElement;
 use Moose;
 
+with "MO::Compile::Slot";
+
 has name => (
 	isa => "Str",
 	is  => "ro",
@@ -11,12 +13,6 @@ has name => (
 sub get_value {
 	my ( $self, $instance ) = @_;
 	$instance->{ $self->name };
-}
-
-sub initialize_and_set_value {
-	my ( $self, $instance, $value ) = @_;
-	$self->initialize( $instance ) unless $self->is_initialized( $instance );
-	$self->set_value( $instance, $value );
 }
 
 sub initialize {
