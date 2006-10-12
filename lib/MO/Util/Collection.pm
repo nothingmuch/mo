@@ -32,6 +32,16 @@ around new => sub {
 	return $self;
 };
 
+sub fmap {
+	my ( $self, $f ) = @_;
+
+	my $res = ( ref $self )->new;
+
+	$res->add( map { $_->$f() } $self->items );
+
+	return $res;
+}
+
 sub items {
 	my $self = shift;
 	$self->by_obj->members;

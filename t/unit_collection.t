@@ -66,3 +66,22 @@ eval { MO::Util::Collection->new( $elk, $elk2 ) };
 ok( $@, "can't create collection with two items of the same name" );
 like( $@, qr/name conflict/, "the right error" );
 
+{
+	package SomeObj;
+	use Moose;
+	has name => ( isa => "Str", is => "rw" );
+}
+
+{
+	my $c = MO::Util::Collection->new( $moose, $elk );
+
+	my $mapping = sub { SomeObj->new( name => shift->name ) };
+
+	my $mapped = $c->fmap($mapping);
+
+	is_deeply(
+		[ eval { sort { $a->name cmp $b->name } $mapped->items } ],
+		[ sort { $a->name cmp $b->name } map { $mapping->($_) } $moose, $elk ],
+		"fmap",
+	);
+}
