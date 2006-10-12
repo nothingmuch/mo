@@ -25,11 +25,6 @@ has attribute => (
 
 }
 
-sub compile {
-	my ( $self, @args ) = @_;
-	$self->attribute->compile( @args )->attach( $self->origin );
-}
-
 sub fields {
 	my ( $self, $class ) = @_;
 

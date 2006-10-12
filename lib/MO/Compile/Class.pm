@@ -196,7 +196,7 @@ sub _combine_interfaces {
 
 sub layout {
 	my $self = shift;
-	$self->_build_layout( map { $_->fields($self) } $self->all_attributes);
+	$self->_build_layout( map { $self->_attr_fields($_) } $self->all_attributes);
 }
 
 sub _build_layout {
@@ -410,22 +410,32 @@ sub private_methods_of_attribute {
 	);
 }
 
-
 sub compile_attribute {
-	my ( $self, $attr ) = @_;
+	my ( $self, $attached_attr ) = @_;
 
-	my @slots = $self->_attr_slots( $attr );
+	my $attr = $attached_attr->attached_item;
+	my $origin = $attached_attr->origin;
 
-	return $attr->compile(
-		class => $self,
-		slots => \@slots,
+	my @slots = $self->_attr_slots( $attached_attr );
+
+	my $compiled = $attr->compile(
+		target => $self,
+		origin => $origin,
+		slots  => \@slots,
 	);
+
+	return $self->attach_item( $origin, $compiled );
 }
 
 sub _attr_slots {
-	my ( $self, $the_attr ) = @_;
+	my ( $self, $attr ) = @_;
 
-	$self->layout->slots_for_fields( $the_attr->fields($self) );
+	$self->layout->slots_for_fields( $self->_attr_fields( $attr ) );
+}
+
+sub _attr_fields {
+	my ( $self, $attr ) = @_;
+	$attr->fields( $self );
 }
 
 sub constructor_method {

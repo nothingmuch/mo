@@ -17,8 +17,13 @@ has attribute => (
 
 }
 
-has class => (
+has target => (
 	does => "MO::Compile::Class",
+	is   => "ro",
+);
+
+has origin => (
+	does => "MO::Compile::Origin",
 	is   => "ro",
 );
 
