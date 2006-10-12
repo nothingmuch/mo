@@ -18,3 +18,25 @@
 
 - option for vtable based dispatch (as opposed to named)
 
+- refactor MO::Compile::Class to be pluggable:
+
+	precendence list based enumartion:
+
+		MO::Compile::Enumerating
+
+			get_all_using_* combinators
+
+			this require ordering for sub extractors via extra methods
+
+	interface composition:
+
+		private / public interface merging (easy)
+
+		multiple public interface merging (harder - declare which extractors shadow?)
+
+	meta-instance data:
+
+		attribute merging, field extraction, layout helpers
+
+		method merging
+
