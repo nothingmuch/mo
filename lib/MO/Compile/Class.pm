@@ -157,7 +157,7 @@ sub _private_methods_to_caller_interfaces {
 			my $collection = $interfaces{$visible} ||= MO::Util::Collection->new;
 
 			# take apart the private method into normal a method, but keep it attached
-			$collection->add( $self->_reattach( $attached_private_method, sub {
+			$collection->add( $self->filter_and_reattach( $attached_private_method, sub {
 				my ( $private_method, $attached ) = @_;
 				return $private_method->method;
 			}) );
@@ -219,7 +219,7 @@ sub merged_roles {
 sub get_all_using_mro_shadowing {
 	my ( $self, $target, $accessor, @args ) = @_;
 
-	my $attaching_accessor = $self->_attaching_accessor( $accessor, @args );
+	my $attaching_accessor = $self->attaching_collection_accessor( $accessor, @args );
 
 	my $shadower = MO::Util::Collection::Shadow::Accessor->new(
 		accessor => $attaching_accessor,
@@ -234,31 +234,11 @@ sub get_all_using_mro_shadowing {
 sub get_all_using_mro {
 	my ( $self, $target, $accessor, @args ) = @_;
 
-	my $attaching_accessor = $self->_attaching_accessor( $accessor, @args );
+	my $attaching_accessor = $self->attaching_collection_accessor( $accessor, @args );
 
 	return (
 		(map { $_->$attaching_accessor->items } reverse $self->class_precedence_list),
 		$self->merged_roles->get_all_using_role_inheritence($target, $attaching_accessor),
-	);
-}
-
-sub _attaching_accessor {
-	my ( $self, $accessor, @args ) = @_;
-
-	return sub {
-		my $class_or_role = shift;
-		$self->_attach_collection(
-			$class_or_role,
-			$class_or_role->$accessor(@args)
-		);
-	};
-}
-
-sub _attach_collection {
-	my ( $self, $origin, $collection ) = @_;
-
-	MO::Util::Collection->new(
-		map { $_->does("MO::Compile::Attached") ? $_ : $_->attach($origin) } $collection->items,
 	);
 }
 
@@ -368,7 +348,7 @@ sub _inflate_private_methods {
 sub _inflate_private_method {
 	my ( $self, $method ) = @_;
 
-	$self->_reattach($method, sub {
+	$self->filter_and_reattach($method, sub {
 		my ( $method, $attached ) = @_;
 		MO::Compile::Method::Private->new(
 			method       => $method,
@@ -382,19 +362,11 @@ sub _merge_private_methods {
 	@methods;
 }
 
-sub _reattach {
-	my ( $self, $attached, $futz ) = @_;
-
-	my $inner = $futz->( $attached->attached_item, $attached );
-
-	$inner->attach( $attached->origin );
-}
-
 # this is a bit of a hack, it applies shadowing to the methods, not the attrs
 sub all_attribute_instance_methods {
 	my $self = shift;
 
-	my $attaching_accessor = $self->_attaching_accessor("attributes");
+	my $attaching_accessor = $self->attaching_collection_accessor("attributes");
 
 	$self->get_all_using_mro_shadowing( $self, sub {
 		my $ancestor = shift;
