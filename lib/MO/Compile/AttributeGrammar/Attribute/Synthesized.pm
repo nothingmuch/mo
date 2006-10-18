@@ -3,7 +3,7 @@
 package MO::Compile::AttributeGrammar::Attribute::Synthesized;
 use Moose;
 
-use MO::Run::MethodDefinition::Simple;
+use MO::Compile::Method::Simple::Compiled;
 
 use Scalar::Util qw/refaddr/;
 
@@ -20,7 +20,7 @@ sub compile {
 	my $body = $self->method->definition->body; # FIXME $self->method->compile($target);
 	my $name = $self->name;
 
-	return MO::Run::MethodDefinition::Simple->new(
+	return MO::Compile::Method::Simple::Compiled->new(
 		body => sub {
 			my $i = shift;
 			my $obj = $i->invocant;

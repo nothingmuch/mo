@@ -5,7 +5,7 @@ use Moose;
 
 use MO::Run::ResponderInterface::Filtered;
 use MO::Run::Responder::Invocant;
-use MO::Run::MethodDefinition::Simple;
+use MO::Compile::Method::Simple::Compiled;
 use MO::Util::Collection;
 
 has ancestors => (
@@ -36,7 +36,7 @@ sub responder_interface {
 	my $self = shift;
 	MO::Run::ResponderInterface::MethodTable->new(
 		methods => {
-			create_instance => MO::Run::MethodDefinition::Simple->new(
+			create_instance => MO::Compile::Method::Simple::Compiled->new(
 				body => sub {
 					my ( $ag_inv, %params ) = @_;
 

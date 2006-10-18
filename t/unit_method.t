@@ -6,9 +6,9 @@ use warnings;
 use Test::More 'no_plan';
 
 use ok "MO::Compile::Method::Simple";
-use ok "MO::Run::MethodDefinition::Simple";
+use ok "MO::Compile::Method::Simple::Compiled";
 
-my $def = MO::Run::MethodDefinition::Simple->new(
+my $def = MO::Compile::Method::Simple::Compiled->new(
 	body => sub { "magic" },
 );
 
@@ -28,6 +28,6 @@ my $method2 = MO::Compile::Method::Simple->new(
 	definition => sub { 42 },
 );
 
-isa_ok( $method2->definition, "MO::Run::MethodDefinition::Simple" );
+isa_ok( $method2->definition, "MO::Compile::Method::Simple::Compiled" );
 is( $method2->definition->body->(), 42, "coerced body" );
 

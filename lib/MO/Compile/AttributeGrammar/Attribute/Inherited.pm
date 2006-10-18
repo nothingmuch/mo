@@ -3,7 +3,7 @@
 package MO::Compile::AttributeGrammar::Attribute::Inherited;
 use Moose;
 
-use MO::Run::MethodDefinition::Simple;
+use MO::Compile::Method::Simple::Compiled;
 
 use Scalar::Util qw/refaddr/;
 
@@ -18,7 +18,7 @@ sub compile {
 
 	my $name = $self->name;
 
-	return MO::Run::MethodDefinition::Simple->new(
+	return MO::Compile::Method::Simple::Compiled->new(
 		body => sub {
 			my ( $i, @args ) = @_;
 			my $obj = $i->invocant;

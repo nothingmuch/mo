@@ -7,7 +7,7 @@ with "MO::Compile::Attribute";
 
 use MO::Compile::Attribute::Simple::Compiled;
 use MO::Compile::Field::Simple;
-use MO::Run::MethodDefinition::Simple;
+use MO::Compile::Method::Simple::Compiled;
 
 sub name {}
 has name => (

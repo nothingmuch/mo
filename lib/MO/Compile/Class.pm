@@ -12,7 +12,7 @@ use MO::Util::Collection::Shadow::Accessor;
 
 use MO::Compile::Method::Simple;
 use MO::Compile::Method::Private;
-use MO::Run::MethodDefinition::Simple;
+use MO::Compile::Method::Simple::Compiled;
 
 use MO::Run::ResponderInterface::MethodTable;
 use MO::Run::ResponderInterface::Multiplexed::ByCaller;
@@ -447,7 +447,7 @@ sub constructor_method {
 		$self,
 		MO::Compile::Method::Simple->new(
 			name       => "create_instance",
-			definition => MO::Run::MethodDefinition::Simple->new(
+			definition => MO::Compile::Method::Simple::Compiled->new(
 				body => sub {
 					my ( $class, @params ) = @_;
 

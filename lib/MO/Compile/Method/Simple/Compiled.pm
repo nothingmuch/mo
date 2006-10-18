@@ -1,9 +1,9 @@
 #!/usr/bin/perl
 
-package MO::Run::MethodDefinition::Simple;
+package MO::Compile::Method::Simple::Compiled;
 use Moose;
 
-extends "MO::Compile::Method::Definition";
+extends "MO::Compile::Method::Compiled";
 
 has body => (
 	isa => "CodeRef",

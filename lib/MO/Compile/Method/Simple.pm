@@ -5,7 +5,7 @@ use Moose;
 
 with "MO::Compile::Method";
 
-use MO::Compile::Method::Definition;
+use MO::Compile::Method::Compiled;
 
 sub name {}
 has name => (
@@ -15,7 +15,7 @@ has name => (
 );
 
 has definition => (
-	isa => "MO::Compile::Method::Definition",
+	isa => "MO::Compile::Method::Compiled",
 	is  => "ro",
 	coerce   => 1,
 	required => 1,
