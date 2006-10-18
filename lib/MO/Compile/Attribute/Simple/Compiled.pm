@@ -17,11 +17,13 @@ has attribute => (
 
 }
 
+sub target {}
 has target => (
 	does => "MO::Compile::Class",
 	is   => "ro",
 );
 
+sub origin {}
 has origin => (
 	does => "MO::Compile::Origin",
 	is   => "ro",
@@ -85,10 +87,12 @@ sub _generate_accessor_method {
 
 	my $slot = ( $self->slots )[0];
 
-	return MO::Compile::Method::Simple->new(
+	my $method = MO::Compile::Method::Simple->new(
 		name       => $self->accessor_name,
 		definition => $self->accessor_body($slot),
 	);
+
+	return $method->attach( $self->origin );;
 }
 
 

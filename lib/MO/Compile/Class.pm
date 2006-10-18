@@ -418,13 +418,11 @@ sub compile_attribute {
 
 	my @slots = $self->_attr_slots( $attached_attr );
 
-	my $compiled = $attr->compile(
+	return $attr->compile(
 		target => $self,
 		origin => $origin,
 		slots  => \@slots,
 	);
-
-	return $self->attach_item( $origin, $compiled );
 }
 
 sub _attr_slots {
