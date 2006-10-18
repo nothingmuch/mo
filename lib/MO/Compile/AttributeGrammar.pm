@@ -52,7 +52,7 @@ sub responder_interface {
 						parents => {},
 						ag      => $ag,
 					};
-					
+
 					return MO::Run::Responder::Invocant->new(
 						invocant => $ag_instance,
 						responder_interface => MO::Run::ResponderInterface::Filtered->new(

@@ -26,7 +26,7 @@ sub superclasses {
 
 sub class_precedence_list {
 	my $self = shift;
-	
+
 	if ( my $superclass = $self->superclass ) {
 		return ( $self, $superclass->class_precedence_list );
 	} else {

@@ -18,7 +18,7 @@ sub method {
 
 sub dispatch {
 	my ( $self, $responder, $inv ) = @_;
-	
+
 	if ( my $def = $self->method( $inv ) ) {
 		my @args = ( $responder, $inv->arguments );
 		my $body = $def->body;

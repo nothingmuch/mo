@@ -31,7 +31,7 @@ sub dispatch {
 
 	$responder  = $self->process_responder($responder, $invocation);
 	$invocation = $self->process_invocation($invocation, $responder);
-	
+
 	if ( my $thunk = $self->responder_interface->dispatch( $responder, $invocation ) ) {
 		return $self->process_dispatch_thunk(
 			$thunk,

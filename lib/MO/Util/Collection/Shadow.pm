@@ -9,7 +9,7 @@ sub shadow {
 	return () unless $head;
 
 	my $head_collection = $self->collection( $head );
-   
+
 	unless ( @tail ) {
 		return $head_collection->items;
 	} else {

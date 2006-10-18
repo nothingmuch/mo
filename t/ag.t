@@ -24,7 +24,7 @@ use ok 'MO::Run::Invocation::Method';
 sub call ($$$;@) {
 	my ( $obj, $method, $caller, @args ) = @_;
 	no warnings;
-	
+
 	my $thunk = $obj->responder_interface->dispatch(
 		$obj,
 		MO::Run::Invocation::Method->new(
@@ -54,7 +54,7 @@ $avg_diff_ag = MO::Compile::AttributeGrammar->new(
 				},
 			),
 		),
-	],	
+	],
 );
 
 my $tree_class_inv;

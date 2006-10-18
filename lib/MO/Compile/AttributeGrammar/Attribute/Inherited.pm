@@ -29,7 +29,7 @@ sub compile {
 			};
 
 			if ( @args ) {
-				$table->{$name} = ( @args == 1 ? [ $args[0] ] : \@args );				
+				$table->{$name} = ( @args == 1 ? [ $args[0] ] : \@args );
 			} else {
 				unless ( exists $table->{$name} ) {
 
@@ -47,7 +47,7 @@ sub compile {
 							arguments => [ $i ], # child
 						),
 					)->();
-					
+
 					unless ( exists $table->{$name} ) {
 						die "Bestowing attribute $name in parent $parent did not set inherited attribute on $i";
 					}

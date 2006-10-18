@@ -36,7 +36,7 @@ has slots => (
 
 sub initialize {
 	my ( $self, $instance, %params ) = @_;
-	
+
 	my $slot = $self->slots->[0];
 
 	$slot->initialize( $instance ); # lazy accessors may skip this

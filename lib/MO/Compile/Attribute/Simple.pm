@@ -47,7 +47,7 @@ sub compile {
 		attribute => $self,
 		%params,
 	);
-}	
+}
 
 __PACKAGE__;
 

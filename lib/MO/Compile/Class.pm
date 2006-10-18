@@ -373,8 +373,8 @@ sub all_attribute_instance_methods {
 
 		my @attrs = $ancestor->$attaching_accessor->items;
 		my @method_collections = map { $self->methods_of_attribute($_) } @attrs;
-	
-		# per ancestor all the accessors are merged symmetrically	
+
+		# per ancestor all the accessors are merged symmetrically
 		MO::Util::Collection->new( MO::Util::Collection::Merge->new->merge( @method_collections ) );
 	});
 }
