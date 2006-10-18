@@ -7,7 +7,42 @@ MO::Overview - An overview of the MO experimental meta-object protocol.
 =head1 DESCRIPTION
 
 This document explains the architecture in L<MO> and assumes you are
-familiar with its compile-time/run-time split.
+familiar with its overall structure and purpose.
+
+=head1 10,000" VIEW
+
+MO is a meta-object protocol, much like the CLOS and L<Class::MOP>.
+
+MO provides both a meta model for compile time abstractions, which is mostly
+defined by convention, and a much simpler and concrete meta model for run time
+abstractions.
+
+The run time abstractions are equally usable for an interpreted, dynamic object
+model in an interepreter, as well as a static, prebound object model in a
+compiler.
+
+=head1 STAGES OF COMPILATION
+
+These are the conceptual stages. In truth, implementation details are a bit
+more complex, but the data flow path is consistent with this description.
+
+=head2 Declaration
+
+During declaration the compile time meta model is built/modified. This is
+illustrated in L</COMPILE-TIME>.
+
+=head2 Gathering
+
+For each class (or other meta object) that is to be compiled into a runtime
+interface a gathering process will collect the attributes and methods from the
+ancestors or other sources, attaching them to their origin. This is explained
+in L</COMPILATION>
+
+=head2 Compilation
+
+Each of the gathered sub objects is then compiled into it's output format.
+These are then collected into a responder interface. This process is also
+explained in L</COMPILATION>.
 
 =head1 COMPILE-TIME
 
