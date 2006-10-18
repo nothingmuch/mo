@@ -101,7 +101,7 @@ sub private_[% foo %]_interfaces {
 	my ( $self, @args ) = @_;
 	$self->_private_methods_to_caller_interfaces(
 		$self->all_private_[% foo %]_methods(@args),
-	),
+	)
 }
 
 [% END %];
@@ -413,7 +413,7 @@ sub private_methods_of_attribute {
 sub compile_attribute {
 	my ( $self, $attached_attr ) = @_;
 
-	my $attr = $attached_attr->attached_item;
+	my $attr   = $attached_attr->attached_item;
 	my $origin = $attached_attr->origin;
 
 	my @slots = $self->_attr_slots( $attached_attr );
@@ -443,22 +443,25 @@ sub constructor_method {
 	my @compiled_attributes = $self->all_compiled_attributes;
 	my $instance_interface  = $self->instance_interface;
 
-	return MO::Compile::Method::Simple->new(
-		name       => "create_instance",
-		definition => MO::Run::MethodDefinition::Simple->new(
-			body => sub {
-				my ( $class, @params ) = @_;
+	return $self->attach_item(
+		$self,
+		MO::Compile::Method::Simple->new(
+			name       => "create_instance",
+			definition => MO::Run::MethodDefinition::Simple->new(
+				body => sub {
+					my ( $class, @params ) = @_;
 
-				my $object = $layout->create_instance_structure;
+					my $object = $layout->create_instance_structure;
 
-				$_->initialize( $object, @params )
-					for @compiled_attributes;
+					$_->initialize( $object, @params )
+						for @compiled_attributes;
 
-				MO::Run::Responder::Invocant->new(
-					invocant            => $object,
-					responder_interface => $instance_interface,
-				);
-			}
+					MO::Run::Responder::Invocant->new(
+						invocant            => $object,
+						responder_interface => $instance_interface,
+					);
+				}
+			),
 		),
 	);
 }

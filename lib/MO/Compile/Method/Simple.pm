@@ -14,13 +14,17 @@ has name => (
 	required => 1,
 );
 
-sub definition {}
 has definition => (
 	isa => "MO::Compile::Method::Definition",
 	is  => "ro",
 	coerce   => 1,
 	required => 1,
 );
+
+sub compile {
+	my ( $self, %params ) = @_;
+	$self->definition;
+}
 
 __PACKAGE__;
 

@@ -7,7 +7,7 @@ use MO::Compile::Method::Attached;
 
 requires "name";
 
-requires "definition";
+requires "compile";
 
 sub attach {
 	my ( $self, $origin ) = @_;

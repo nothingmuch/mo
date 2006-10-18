@@ -11,7 +11,7 @@ has method => (
 	does => "MO::Compile::Method",
 	is   => "ro",
 	required => 1,
-	handles => [qw/name definition/],
+	handles => [qw/name compile/],
 );
 
 has visible_from => (
