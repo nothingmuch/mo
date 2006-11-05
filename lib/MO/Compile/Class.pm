@@ -254,6 +254,7 @@ sub all_instance_methods {
 
 sub all_class_methods {
 	my $self = shift;
+
 	return (
 		$self->all_regular_class_methods,
 		$self->special_class_methods,
