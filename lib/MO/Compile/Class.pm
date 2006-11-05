@@ -13,6 +13,7 @@ use MO::Util::Collection::Shadow::Accessor;
 use MO::Compile::Method::Simple;
 use MO::Compile::Method::Private;
 use MO::Compile::Method::Simple::Compiled;
+use MO::Compile::Class::Method::Constructor;
 
 use MO::Run::ResponderInterface::MethodTable;
 use MO::Run::ResponderInterface::Multiplexed::ByCaller;
@@ -445,23 +446,11 @@ sub constructor_method {
 
 	return $self->attach_item(
 		$self,
-		MO::Compile::Method::Simple->new(
-			name       => "create_instance",
-			definition => MO::Compile::Method::Simple::Compiled->new(
-				body => sub {
-					my ( $class, @params ) = @_;
-
-					my $object = $layout->create_instance_structure;
-
-					$_->initialize( $object, @params )
-						for @compiled_attributes;
-
-					MO::Run::Responder::Invocant->new(
-						invocant            => $object,
-						responder_interface => $instance_interface,
-					);
-				}
-			),
+		MO::Compile::Class::Method::Constructor->new(
+	   		name                => "create_instance",
+			layout              => $layout,
+			initializers        => \@compiled_attributes,
+			responder_interface => $instance_interface,
 		),
 	);
 }
