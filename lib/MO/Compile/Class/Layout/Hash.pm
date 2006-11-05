@@ -3,6 +3,8 @@
 package MO::Compile::Class::Layout::Hash;
 use Moose;
 
+with "MO::Compile::Layout";
+
 use MO::Compile::Slot::HashElement;
 
 has class => (
@@ -11,6 +13,7 @@ has class => (
 	required => 1,
 );
 
+sub fields {}
 has fields => (
 	isa => "ArrayRef",
 	is  => "ro",
@@ -25,16 +28,6 @@ sub BUILD {
 			warn "The field name " . $field->name . " may conflict with private attribute namespacing";
 		}
 	}
-}
-
-sub slots {
-	my $self = shift;
-	$self->slots_for_fields( $self->fields );
-}
-
-sub slots_for_fields {
-	my ( $self, @fields ) = @_;
-	map { $self->slot_for_field($_) } @fields;
 }
 
 sub slot_for_field {
