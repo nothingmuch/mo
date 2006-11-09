@@ -5,6 +5,8 @@ use Moose;
 
 with "MO::Run::ResponderInterface::Multiplexed";
 
+use Carp qw/croak/;
+
 has per_caller_interfaces => (
 	isa => "HashRef",
 	is  => "rw",
@@ -24,9 +26,11 @@ sub interface_for_caller {
 }
 
 sub interface_for {
-	my ( $self, $responder, $inv ) = @_;
+	my ( $self, $responder, $inv, %params ) = @_;
 
-	if ( my $caller = $inv->caller ) {
+	my $stack = $params{stack} || croak "Can't do per-caller multiplexing without a stack";
+
+	if ( my $caller = $stack->tail ) {
 		return $self->interface_for_caller( $caller );
 	}
 

@@ -9,6 +9,7 @@ use ok "MO::Compile::Class::MI";
 use ok "MO::Compile::Method::Simple";
 use ok "MO::Run::Invocation::Method";
 use ok "MO::Run::Responder::Invocant";
+use ok "MO::Run::Aux::Stack";
 
 my $base = MO::Compile::Class::MI->new(
 	instance_methods => [
@@ -35,10 +36,14 @@ my $sub = MO::Compile::Class::MI->new(
 	],
 );
 
+my $other = MO::Compile::Class::MI->new();
+
 my $sub_box = MO::Run::Responder::Invocant->new(
 	invocant            => $sub,
 	responder_interface => $sub->class_interface,
 );
+
+sub stack { MO::Run::Aux::Stack->new( items => [ @_ ] ) }
 
 my $sub_obj_box = $sub_box->responder_interface->dispatch(
 	$sub_box,
@@ -50,23 +55,22 @@ is(
 		$sub_obj_box,
 		MO::Run::Invocation::Method->new(
 			name      => "foo",
-			argumetns => [],
-			caller    => $sub,
+			arguments => [],
 		),
+		stack => stack($sub),
 	)->(),
 	"sub::foo",
 	"private dispatch from sub",
 );
-
 
 is(
 	$sub_obj_box->responder_interface->dispatch(
 		$sub_obj_box,
 		MO::Run::Invocation::Method->new(
 			name      => "foo",
-			argumetns => [],
-			caller    => $base,
+			arguments => [],
 		),
+		stack => stack($base),
 	)->(),
 	"base::foo",
 	"private dispatch from base",
@@ -77,12 +81,11 @@ is(
 		$sub_obj_box,
 		MO::Run::Invocation::Method->new(
 			name      => "foo",
-			argumetns => [],
+			arguments => [],
 		),
+		stack => stack($other),
 	)->(),
 	"foo",
 	"public dispatch",
 );
-
-
 

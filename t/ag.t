@@ -18,20 +18,26 @@ use ok 'MO::Compile::Attribute::Simple';
 use ok 'MO::Compile::Method::Simple';
 use ok 'MO::Run::Responder::Invocant';
 use ok 'MO::Run::Invocation::Method';
+use ok 'MO::Run::Aux::Stack';
 
 # a shorthand form for invoking named methods
 # like the -> operator
+
+my $stack = MO::Run::Aux::Stack->new;
+
 sub call ($$$;@) {
 	my ( $obj, $method, $caller, @args ) = @_;
 	no warnings;
+
+	my $f = $stack->push( $caller );
 
 	my $thunk = $obj->responder_interface->dispatch(
 		$obj,
 		MO::Run::Invocation::Method->new(
 			name      => $method,
 			arguments => \@args,
-			caller    => $caller,
 		),
+		stack => $stack,
 	);
 
 	die "No such method: $method on inv $obj" unless $thunk;
@@ -187,3 +193,4 @@ my @children = @{ call($diff_tree, "children", undef) || [] };
 is( scalar(@children), 2, "two children" );
 is( eval { call($children[0], "value", undef) }, -5, "child 1 diff from average is right" );
 is( eval { call($children[1], "value", undef) }, 5,  "child 2 diff from average is right" );
+

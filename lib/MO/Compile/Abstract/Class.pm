@@ -26,6 +26,7 @@ sub _interface_from_methods {
 
 	MO::Run::ResponderInterface::MethodTable->new(
 		methods => { map { $_->name => $self->compile_method($_) } @methods },
+		origin  => $self,
 	);
 }
 

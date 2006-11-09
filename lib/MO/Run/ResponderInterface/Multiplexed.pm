@@ -10,16 +10,16 @@ requires "fallback_interface";
 requires "interface_for";
 
 sub dispatch {
-	my ( $self, $responder, $inv ) = @_;
+	my ( $self, $responder, $inv, @params ) = @_;
 
 	# the maybe monad would be nice here ;-)
-	if ( my $interface = $self->interface_for( $responder, $inv ) ) {
-		if ( my $match = $interface->dispatch( $responder, $inv ) ) {
+	if ( my $interface = $self->interface_for( $responder, $inv, @params ) ) {
+		if ( my $match = $interface->dispatch( $responder, $inv, @params ) ) {
 			return $match;
 		}
 	}
 
-	return $self->dispatch_failed( $responder, $inv );
+	return $self->dispatch_failed( $responder, $inv, @params );
 }
 
 sub dispatch_failed {

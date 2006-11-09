@@ -16,12 +16,6 @@ has arguments => (
 	auto_deref => 1,
 );
 
-has 'caller' => (
-	isa => "Object",
-	is  => "rw",
-	#required => 1, # FIXME
-);
-
 __PACKAGE__;
 
 __END__

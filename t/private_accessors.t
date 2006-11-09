@@ -9,6 +9,7 @@ use ok "MO::Compile::Class::MI";
 use ok "MO::Compile::Attribute::Simple";
 use ok "MO::Run::Invocation::Method";
 use ok "MO::Run::Responder::Invocant";
+use ok "MO::Run::Aux::Stack";
 
 my $base = MO::Compile::Class::MI->new(
 	attributes => [
@@ -40,13 +41,15 @@ my $sub_obj_box = $sub_box->responder_interface->dispatch(
 	MO::Run::Invocation::Method->new( name => "create_instance", arguments => [ elk => "moose" ] ),
 )->();
 
+sub stack { MO::Run::Aux::Stack->new( items => [ @_ ] ) }
+
 $sub_obj_box->responder_interface->dispatch(
 	$sub_obj_box,
 	MO::Run::Invocation::Method->new(
 		name      => "x",
 		arguments => ["foo"],
-		'caller'  => $sub,
 	),
+	stack => stack($sub),
 )->();
 
 $sub_obj_box->responder_interface->dispatch(
@@ -54,8 +57,8 @@ $sub_obj_box->responder_interface->dispatch(
 	MO::Run::Invocation::Method->new(
 		name      => "x",
 		arguments => ["bar"],
-		'caller'  => $base,
 	),
+	stack => stack($base),
 )->();
 
 is(
@@ -64,8 +67,8 @@ is(
 		MO::Run::Invocation::Method->new(
 			name      => "x",
 			arguments => [],
-			'caller'  => $sub,
 		),
+		stack => stack($sub),
 	)->(),
 	"foo",
 	"private attr for sub",
@@ -77,8 +80,8 @@ is(
 		MO::Run::Invocation::Method->new(
 			name      => "x",
 			arguments => [],
-			'caller'  => $base,
 		),
+		stack => stack($base),
 	)->(),
 	"bar",
 	"private attr for base",
