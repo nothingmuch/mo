@@ -27,16 +27,17 @@ has around_filter => (
 );
 
 sub dispatch {
-	my ( $self, $responder, $invocation ) = @_;
+	my ( $self, $responder, $invocation, @params ) = @_;
 
-	$responder  = $self->process_responder($responder, $invocation);
-	$invocation = $self->process_invocation($invocation, $responder);
+	$responder  = $self->process_responder($responder, $invocation, @params);
+	$invocation = $self->process_invocation($invocation, $responder, @params);
 
-	if ( my $thunk = $self->responder_interface->dispatch( $responder, $invocation ) ) {
+	if ( my $thunk = $self->responder_interface->dispatch( $responder, $invocation, @params ) ) {
 		return $self->process_dispatch_thunk(
 			$thunk,
 			$responder,
 			$invocation,
+			@params,
 		);
 	} else {
 		return;
@@ -44,30 +45,30 @@ sub dispatch {
 }
 
 sub process_responder {
-	my ( $self, $responder, $invocation ) = @_;
+	my ( $self, $responder, $invocation, @params ) = @_;
 
 	if ( my $filter = $self->responder_filter ) {
-		return $filter->( $responder, $invocation, $self->responder_interface );
+		return $filter->( $responder, $invocation, $self->responder_interface, @params );
 	} else {
 		return $responder;
 	}
 }
 
 sub process_invocation {
-	my ( $self, $invocation, $responder ) = @_;
+	my ( $self, $invocation, $responder, @params ) = @_;
 
 	if ( my $filter = $self->invocation_filter ) {
-		return $filter->( $invocation, $responder, $self->responder_interface );
+		return $filter->( $invocation, $responder, $self->responder_interface, @params );
 	} else {
 		return $invocation;
 	}
 }
 
 sub process_dispatch_thunk {
-	my ( $self, $thunk, $responder, $invocation ) = @_;
+	my ( $self, $thunk, $responder, $invocation, @params ) = @_;
 
 	if ( my $around = $self->around_filter ) {
-		return $around->($thunk, $responder, $invocation, $self->responder_interface);
+		return $around->($thunk, $responder, $invocation, $self->responder_interface, @params );
 	} else {
 		return $thunk;
 	}

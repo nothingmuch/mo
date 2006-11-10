@@ -7,6 +7,8 @@ use MO::Compile::Method::Simple::Compiled;
 
 use Scalar::Util qw/refaddr/;
 
+use MO::Run::Aux ();
+
 has name => (
 	isa => "Str",
 	is  => "ro",
@@ -40,13 +42,7 @@ sub compile {
 
 					my $parent_interface = $parent->responder_interface->interface_for_ag_parent($MO::Compile::AttributeGrammar::AG); # FIXME use attached one in Inherited $self?
 
-					my $thunk = $parent_interface->dispatch(
-						$parent,
-						MO::Run::Invocation::Method->new(
-							name      => $name,
-							arguments => [ $i ], # child
-						),
-					)->();
+					MO::Run::Aux::method_call( $parent, $name, $parent_interface, $i );
 
 					unless ( exists $table->{$name} ) {
 						die "Bestowing attribute $name in parent $parent did not set inherited attribute on $i";

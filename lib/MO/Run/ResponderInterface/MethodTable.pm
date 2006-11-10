@@ -17,8 +17,8 @@ has methods => (
 );
 
 sub stack_frame {
-	my $self = shift;
-	$self->origin;
+	my ( $self, %params ) = @_;
+	$params{stack_frame} || $self->origin;
 }
 
 sub method {
@@ -33,8 +33,8 @@ sub dispatch {
 		my @args = ( $responder, $inv->arguments );
 		my $body = $def->body;
 
-		if ( 0 and my $stack = $params{stack} ) { # FIXME not yet in use
-			my $caller = $self->stack_frame || die "don't have value for caller";
+		if ( my $stack = $params{stack} ) { # FIXME not yet in use
+			my $caller = $self->stack_frame(%params) || die "don't have value for caller";
 			return sub { my $frame = $stack->push( $caller ); $body->( @args ) };
 		} else {
 			return sub { $body->( @args ) };

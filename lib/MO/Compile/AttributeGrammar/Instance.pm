@@ -65,6 +65,7 @@ sub interface {
 
 	for ( values %interfaces ) {
 		$_ = MO::Run::ResponderInterface::MethodTable->new(
+			origin  => $self,
 			methods => { map { $_->name => $_->compile($target) } @$_ },
 		);
 	}

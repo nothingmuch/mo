@@ -3,6 +3,8 @@
 package MO::Compile::AttributeGrammar;
 use Moose;
 
+with qw/MO::Compile::Origin/;
+
 use MO::Run::ResponderInterface::Filtered;
 use MO::Run::Responder::Invocant;
 use MO::Compile::Method::Simple::Compiled;
@@ -35,6 +37,7 @@ sub _seen {
 sub responder_interface {
 	my $self = shift;
 	MO::Run::ResponderInterface::MethodTable->new(
+		origin => $self,
 		methods => {
 			create_instance => MO::Compile::Method::Simple::Compiled->new(
 				body => sub {

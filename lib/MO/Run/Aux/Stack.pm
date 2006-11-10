@@ -34,7 +34,9 @@ sub frames {
 
 sub tail {
 	my $self = shift;
-	$self->get_item(0);
+
+	local $@;
+	eval { $self->get_item(0) };
 }
 
 sub get_item {
