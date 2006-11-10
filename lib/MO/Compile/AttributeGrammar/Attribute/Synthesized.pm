@@ -4,6 +4,7 @@ package MO::Compile::AttributeGrammar::Attribute::Synthesized;
 use Moose;
 
 use MO::Compile::Method::Simple::Compiled;
+use MO::Run::Aux ();
 
 use Scalar::Util qw/refaddr/;
 
@@ -15,15 +16,17 @@ has method => (
 );
 
 sub compile {
-	my ( $self, $target ) = @_;
+	my ( $self, %params ) = @_;
 
-	my $body = $self->method->definition->body; # FIXME $self->method->compile($target);
+	my $target = $params{target};
+
+	my $body = $self->method->compile(%params); # FIXME $self->method->compile($target);
 	my $name = $self->name;
 
 	return MO::Compile::Method::Simple::Compiled->new(
 		body => sub {
 			my $i = shift;
-			my $obj = $i->invocant;
+			my $obj = MO::Run::Aux::unbox_value($i);
 
 			my $table = $MO::Compile::AttributeGrammar::AG_VALUE_TABLE{ refaddr($obj) } ||= do {
 				#$MO::Compile::AttributeGrammar::AG_INSTANCE->_seen( $i );
@@ -33,7 +36,12 @@ sub compile {
 			unless ( exists $table->{$name} ) {
 				local $@;
 				push @MO::Compile::AttributeGrammar::AG_STACK, $i;
-				eval { $table->{$name} = [ wantarray ? $i->$body() : scalar($i->$body()) ] };
+				eval {
+					$table->{$name} = [ wantarray
+						? MO::Run::Aux::method_call( $i, $body )
+						: scalar( MO::Run::Aux::method_call( $i, $body ) )
+					];
+				};
 				pop @MO::Compile::AttributeGrammar::AG_STACK;
 
 				if ( my $err = $@ ) {

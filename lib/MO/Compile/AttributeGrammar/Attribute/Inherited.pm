@@ -16,7 +16,7 @@ has name => (
 );
 
 sub compile {
-	my $self = shift;
+	my ( $self, %params ) = @_;
 
 	my $name = $self->name;
 

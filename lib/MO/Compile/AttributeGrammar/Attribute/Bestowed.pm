@@ -7,13 +7,8 @@ has method => (
 	does => "MO::Compile::Method",
 	is   => "ro",
 	required => 1,
-	handles => [qw/name/],
+	handles => [qw/name compile/],
 );
-
-sub compile {
-	my $self = shift;
-	$self->method->definition;
-}
 
 __PACKAGE__;
 
