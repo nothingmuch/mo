@@ -71,10 +71,18 @@ sub private_methods {
 	}
 }
 
-sub _generate_accessor_method {
+sub slot {
 	my $self = shift;
 
-	my $slot = ( $self->slots )[0];
+	my @slots = $self->slots;
+
+	warn "Attribute $self has more than one slot, but the generated accessor will only use the first one" if @slots > 1;
+
+	return $slots[0];
+}
+
+sub _generate_accessor_method {
+	my $self = shift;
 
 	my $method = MO::Compile::Class::Method::Accessor->new(
 		name      => $self->accessor_name,
