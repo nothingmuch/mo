@@ -99,19 +99,3 @@ sub push {
 __PACKAGE__;
 
 __END__
-
-=pod
-
-=head1 NAME
-
-MO::Run::Aux::Stack - 
-
-=head1 SYNOPSIS
-
-	use MO::Run::Aux::Stack;
-
-=head1 DESCRIPTION
-
-=cut
-
-
