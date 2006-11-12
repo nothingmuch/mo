@@ -5,6 +5,8 @@ use Moose;
 
 with "MO::Run::ResponderInterface::Multiplexed";
 
+use MO::Run::Aux;
+
 use Carp qw/croak/;
 
 has child => (
@@ -47,7 +49,7 @@ sub interface_for {
 		}
 
 		if ( $ag ) {
-			if ( $responder->invocant == $MO::Compile::AttributeGrammar::AG_ROOT->invocant ) {
+			if ( MO::Run::Aux::unbox_value($responder) == MO::Run::Aux::unbox_value($MO::Compile::AttributeGrammar::AG_ROOT) ) {
 				return $self->interface_for_ag_root($ag);
 			} else {
 				return $self->interface_for_ag_child($ag);

@@ -15,6 +15,11 @@ has name => (
 	required => 1,
 );
 
+sub __key {
+	my $obj = shift;
+	refaddr($obj) or die "aaah! can't index non reference in attribute grammar value table: $obj";
+}
+
 sub compile {
 	my ( $self, %params ) = @_;
 
@@ -23,9 +28,10 @@ sub compile {
 	return MO::Compile::Method::Simple::Compiled->new(
 		body => sub {
 			my ( $i, @args ) = @_;
-			my $obj = $i->invocant;
+			my $obj = MO::Run::Aux::unbox_value( $i );
+			my $key = __key($obj);
 
-			my $table = $MO::Compile::AttributeGrammar::AG_VALUE_TABLE{ refaddr($obj) } ||= do {
+			my $table = $MO::Compile::AttributeGrammar::AG_VALUE_TABLE{$key} ||= do {
 				$MO::Compile::AttributeGrammar::AG_INSTANCE->_seen( $i );
 				{};
 			};
@@ -35,7 +41,7 @@ sub compile {
 			} else {
 				unless ( exists $table->{$name} ) {
 
-					my $parent = $MO::Compile::AttributeGrammar::AG_PARENT_TABLE{ refaddr($obj) } ||= do {
+					my $parent = $MO::Compile::AttributeGrammar::AG_PARENT_TABLE{$key} ||= do {
 						warn "hacking parent, hardcoded to root, stack: @MO::Compile::AttributeGrammar::AG_STACK";
 						$MO::Compile::AttributeGrammar::AG_STACK[0]; # FIXME
 					};

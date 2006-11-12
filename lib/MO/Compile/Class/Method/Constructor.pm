@@ -7,6 +7,8 @@ with "MO::Compile::Method";
 
 use MO::Compile::Method::Compiled;
 
+use MO::Run::Aux;
+
 sub name {}
 has name => (
 	isa => "Str",
@@ -46,10 +48,7 @@ sub compile {
 
 			my $object = $layout->create_instance_structure;
 
-			my $boxed = MO::Run::Responder::Invocant->new( # FIXME box and unbox macros
-				invocant            => $object,
-				responder_interface => $responder_interface,
-			);
+			my $boxed = MO::Run::Aux::box( $object, $responder_interface );
 
 			$_->initialize_instance( $boxed, @params ) for @initializers;
 

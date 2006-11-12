@@ -7,6 +7,7 @@ with "MO::Compile::Attribute::Compiled";
 
 use MO::Compile::Method::Simple;
 use MO::Compile::Class::Method::Accessor;
+use MO::Run::Aux;
 
 BEGIN {
 
@@ -42,12 +43,12 @@ sub initialize_instance {
 
 	my $slot = $self->slots->[0];
 
-	my $instance = $responder->invocant;
+	my $structure = MO::Run::Aux::unbox_value( $responder );
 
-	$slot->initialize( $instance ); # lazy accessors may skip this, # FIXME unbox macro
+	$slot->initialize( $structure ); # lazy accessors may skip this
 
 	if ( exists $params{ $self->name } ) {
-		$slot->set_value( $instance, $params{ $self->name } );
+		$slot->set_value( $structure, $params{ $self->name } );
 	};
 }
 

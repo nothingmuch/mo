@@ -15,6 +15,11 @@ has method => (
 	handles => [qw/name/],
 );
 
+sub __key {
+	my $obj = shift;
+	refaddr($obj) or die "aaah! can't index non reference in attribute grammar value table: $obj";
+}
+
 sub compile {
 	my ( $self, %params ) = @_;
 
@@ -28,7 +33,7 @@ sub compile {
 			my $i = shift;
 			my $obj = MO::Run::Aux::unbox_value($i);
 
-			my $table = $MO::Compile::AttributeGrammar::AG_VALUE_TABLE{ refaddr($obj) } ||= do {
+			my $table = $MO::Compile::AttributeGrammar::AG_VALUE_TABLE{__key($obj)} ||= do {
 				#$MO::Compile::AttributeGrammar::AG_INSTANCE->_seen( $i );
 				{};
 			};

@@ -33,7 +33,7 @@ sub dispatch {
 		my @args = ( $responder, $inv->arguments );
 		my $body = $def->body;
 
-		if ( my $stack = $params{stack} ) { # FIXME not yet in use
+		if ( my $stack = $params{stack} ) {
 			my $caller = $self->stack_frame(%params) || die "don't have value for caller";
 			return sub { my $frame = $stack->push( $caller ); $body->( @args ) };
 		} else {

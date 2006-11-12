@@ -6,6 +6,7 @@ use Moose;
 with "MO::Compile::Method";
 
 use MO::Compile::Method::Compiled;
+use MO::Run::Aux;
 
 sub name {}
 has name => (
@@ -35,10 +36,12 @@ sub compile {
 		body => sub	{
 			my ( $instance, @args ) = @_;
 
+			my $structure = MO::Run::Aux::unbox_value($instance);
+
 			if ( @args ) {
-				return $slot->set_value( $instance->invocant, @args ); # FIXME unbox macro
+				return $slot->set_value( $structure, @args );
 			} else {
-				return $slot->get_value( $instance->invocant );
+				return $slot->get_value( $structure );
 			}
 		},
 	);

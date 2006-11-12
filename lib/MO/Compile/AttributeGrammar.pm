@@ -9,6 +9,7 @@ use MO::Run::ResponderInterface::Filtered;
 use MO::Run::Responder::Invocant;
 use MO::Compile::Method::Simple::Compiled;
 use MO::Util::Collection;
+use MO::Run::Aux;
 
 has ancestors => (
 	isa => "ArrayRef",
@@ -43,7 +44,7 @@ sub responder_interface {
 				body => sub {
 					my ( $ag_inv, %params ) = @_;
 
-					my $ag = $ag_inv->invocant,
+					my $ag = MO::Run::Aux::unbox_value( $ag_inv ),
 
 					my $root = $params{root} || die "Attribute grammars need a root object";
 
@@ -56,12 +57,12 @@ sub responder_interface {
 						ag      => $ag,
 					};
 
-					return MO::Run::Responder::Invocant->new(
-						invocant => $ag_instance,
-						responder_interface => MO::Run::ResponderInterface::Filtered->new(
+					return MO::Run::Aux::box(
+						$ag_instance,
+						MO::Run::ResponderInterface::Filtered->new(
 							responder_filter => sub {
 								my ( $responder, $invocation, $responder_interface ) = @_;
-								$responder->invocant->{root};
+								MO::Run::Aux::unbox_value($responder)->{root};
 							},
 							around_filter    => sub {
 								my ( $thunk, $responder, $invocation, $responder_interface ) = @_;
