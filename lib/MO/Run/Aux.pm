@@ -5,6 +5,8 @@ package MO::Run::Aux;
 use strict;
 use warnings;
 
+use MO::Run::Responder::Invocant;
+use MO::Run::Invocation::Method;
 use MO::Run::Aux::Stack;
 
 use Scalar::Util qw/blessed/;
@@ -21,11 +23,14 @@ our $STACK;
 our $EMITTER;
 our $PACKAGE_SEQUENCE = "A";
 tie our %RI_TO_PKG, 'Tie::RefHash';
+our %PKG_TO_RI;
 
 sub _responder_interface_to_package {
 	my $responder_interface = shift;
 
 	my $pkg = $RI_TO_PKG{$responder_interface} ||= "MO::Run::Aux::ANON_" . $PACKAGE_SEQUENCE++;
+
+	$PKG_TO_RI{$pkg} = $responder_interface;
 
 	$EMITTER ||= _setup_emitter();
 
@@ -115,6 +120,20 @@ sub method_call ($$;@) {
 
 			return $thunk->();
 		}
+	}
+}
+
+sub caller {
+	if ( $MO_NATIVE_RUNTIME ) {
+		my $package = ( CORE::caller(shift || 0 + 1) )[0];
+
+		if ( my $ri = $PKG_TO_RI{$package} ) {
+			return $ri->origin;
+		} else {
+			return $package;
+		}
+	} else {
+		return stack()->tail;
 	}
 }
 

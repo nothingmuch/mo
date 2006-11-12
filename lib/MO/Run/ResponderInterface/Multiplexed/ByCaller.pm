@@ -17,6 +17,7 @@ sub fallback_interface {}
 has fallback_interface => (
 	does => "MO::Run::Abstract::ResponderInterface",
 	is   => "rw",
+	handles  => [qw/origin/],
 	required => 1,
 );
 
