@@ -39,17 +39,21 @@ has slots => (
 );
 
 sub initialize_instance {
-	my ( $self, $responder, %params ) = @_;
+	my ( $self, $responder, $params ) = @_;
 
-	my $slot = $self->slots->[0];
+	$self->slot->initialize( MO::Run::Aux::unbox_value( $responder ) ); # lazy accessors may skip this
+}
 
-	my $structure = MO::Run::Aux::unbox_value( $responder );
+sub params_to_fields {
+	my ( $self, $params ) = @_;
 
-	$slot->initialize( $structure ); # lazy accessors may skip this
+	my $name = $self->name;
 
-	if ( exists $params{ $self->name } ) {
-		$slot->set_value( $structure, $params{ $self->name } );
-	};
+	if ( exists $params->{$name} ) {
+		return( $self->slot->field, $params->{$name} );
+	} else {
+		return ();
+	}
 }
 
 sub methods {

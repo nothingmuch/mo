@@ -5,6 +5,13 @@ use Moose;
 
 with "MO::Compile::Slot";
 
+sub field {}
+has field => (
+	does => "MO::Compile::Field",
+	is   => "ro",
+	required => 1,
+);
+
 has name => (
 	isa => "Str",
 	is  => "ro",

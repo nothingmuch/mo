@@ -34,7 +34,8 @@ sub slot_for_field {
 	my ( $self, $field ) = @_;
 
 	$self->slot_class($field)->new(
-		name => $self->slot_name_for_field($field),
+		name  => $self->slot_name_for_field($field),
+		field => $field,
 	);
 }
 
@@ -59,9 +60,14 @@ sub empty_instance_structure {
 }
 
 sub create_instance_structure {
-	my ( $self ) = @_;
+	my ( $self, @params ) = @_;
+
 	my $instance = $self->empty_instance_structure;
+
 	$_->construct( $instance ) for $self->slots;
+
+	$self->initialize_instance_fields( $instance, @params );
+
 	return $instance;
 }
 

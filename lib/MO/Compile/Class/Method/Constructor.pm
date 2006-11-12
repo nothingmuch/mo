@@ -44,13 +44,17 @@ sub compile {
 
 	return MO::Compile::Method::Simple::Compiled->new(
 		body => sub {
-			my ( $class, @params ) = @_;
+			my ( $class, %params ) = @_;
 
-			my $object = $layout->create_instance_structure;
+			my @fields;
+
+			push @fields, $_->params_to_fields( \%params ) for grep { $_->can("params_to_fields") } @initializers;
+
+			my $object = $layout->create_instance_structure( fields => \@fields );
 
 			my $boxed = MO::Run::Aux::box( $object, $responder_interface );
 
-			$_->initialize_instance( $boxed, @params ) for @initializers;
+			$_->initialize_instance( $boxed, \%params ) for grep { $_->can("initialize_instance") } @initializers;
 
 			return $boxed;
 		}

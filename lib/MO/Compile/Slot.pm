@@ -3,6 +3,8 @@
 package MO::Compile::Slot;
 use Moose::Role;
 
+requires "field";
+
 requires "construct";
 
 requires "initialize";
