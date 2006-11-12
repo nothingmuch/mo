@@ -1,10 +1,8 @@
-- add a `compile` method to methods, much like attributes have right now
+- constructor should pass the args through the accessors, accepting a list of
+  key value pairs, keyed by field, for the layout.
 
 - next/super etc -- methods must be MRO aware - this required a split into
   ::Compiled much like attr is right now.
-
-- add Compile::Method::Accessor, which contains a ref to the attr on whose
-  behalf it was generated
 
 - add an emitter that can take a collection of method interfaces and compile
   them down to perl 5 packages. Points that must be considered:
