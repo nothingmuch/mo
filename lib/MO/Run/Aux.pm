@@ -9,13 +9,38 @@ use MO::Run::Aux::Stack;
 
 use Scalar::Util qw/blessed/;
 
+use Tie::RefHash;
+
 use Sub::Exporter -setup => {
 	exports => [qw/box unbox_value stack method_call/],
 };
 
-our $MO_NATIVE_RUNTIME = 0;
-our $MO_NATIVE_RUNTIME_NO_INDIRECT_BOX = 0;
+our $MO_NATIVE_RUNTIME                 = $ENV{MO_NATIVE_RUNTIME};
+our $MO_NATIVE_RUNTIME_NO_INDIRECT_BOX = $ENV{MO_NATIVE_RUNTIME_NO_INDIRECT_BOX};
 our $STACK;
+our $EMITTER;
+our $PACKAGE_SEQUENCE = "A";
+tie our %RI_TO_PKG, 'Tie::RefHash';
+
+sub _responder_interface_to_package {
+	my $responder_interface = shift;
+
+	my $pkg = $RI_TO_PKG{$responder_interface} ||= "MO::Run::Aux::ANON_" . $PACKAGE_SEQUENCE++;
+
+	$EMITTER ||= _setup_emitter();
+
+	$EMITTER->responder_interface_to_package(
+		responder_interface => $responder_interface,
+		package             => $pkg,
+	);
+
+	return $pkg;
+}
+
+sub _setup_emitter {
+	require MO::Emit::P5;
+	MO::Emit::P5->new;
+}
 
 sub box ($$) {
 	my ( $instance, $responder_interface ) = @_;
