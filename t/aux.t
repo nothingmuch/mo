@@ -95,7 +95,7 @@ is_deeply(
 		"stack items - autopop",
 	);
 }
-		
+
 is_deeply(
 	[ $stack->items ],
 	[ ],
