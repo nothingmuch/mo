@@ -10,6 +10,9 @@ use ok "MO::Compile::Method::Simple";
 use ok "MO::Run::Invocation::Method";
 use ok "MO::Run::Responder::Invocant";
 use ok "MO::Run::Aux::Stack";
+use ok "MO::Aux";
+
+$MO::Run::MO_NATIVE_RUNTIME = 0;
 
 my $base = MO::Compile::Class::MI->new(
 	instance_methods => [

@@ -9,6 +9,9 @@ use ok 'MO::Run::ResponderInterface::MethodTable';
 use ok 'MO::Run::Responder::Invocant';
 use ok 'MO::Run::Invocation::Method';
 use ok 'MO::Compile::Method::Simple::Compiled';
+use ok 'MO::Run::Aux';
+
+$MO::Run::Aux::MO_NATIVE_RUNTIME = 0;
 
 sub does_ok ($$;$) {
 	my ( $inv, $role, $desc ) = @_;
@@ -71,3 +74,4 @@ ok(
 	),
 	"can't dispatch without method def",
 );
+

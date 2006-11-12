@@ -5,11 +5,14 @@ use warnings;
 
 use Test::More 'no_plan';
 
+use t::stats;
+
 use ok "MO::Compile::Class::MI";
 use ok 'MO::Compile::Method::Simple';
 use ok 'MO::Compile::Attribute::Simple';
-use ok 'MO::Run::Invocation::Method';
-use ok 'MO::Run::Responder::Invocant';
+use ok 'MO::Run::Aux';
+
+t::stats->start(qw/construct runtime/);
 
 my $base = MO::Compile::Class::MI->new();
 
@@ -60,6 +63,10 @@ my $colorful_point3d = MO::Compile::Class::MI->new(
 	superclasses => [ $point3d, $colorful ],
 );
 
+t::stats->finish("construct");
+
+t::stats->start(qw/mro meta_calc/);
+
 is_deeply(
 	[ $colorful_point->class_precedence_list ],
 	[ $colorful_point, $point, $colorful, $base ],
@@ -84,44 +91,35 @@ is_deeply(
 	"inherited accessors of deeper mi",
 );
 
-my $colorful_point3d_box = MO::Run::Responder::Invocant->new(
-	invocant            => $colorful_point3d,
-	responder_interface => $colorful_point3d->class_interface,
+t::stats->finish("mro");
+
+my $colorful_point3d_box = MO::Run::Aux::box( $colorful_point3d, $colorful_point3d->class_interface );
+
+my $colorful_point3d_obj_box = MO::Run::Aux::method_call(
+	$colorful_point3d_box,
+	"create_instance",
+	x => 1,
+	y => 2,
+	z => 3,
+	color => "shiny",
 );
 
-my $colorful_point3d_obj_box = $colorful_point3d_box->responder_interface->dispatch(
-	$colorful_point3d_box,
-	MO::Run::Invocation::Method->new(
-		name => "create_instance",
-		arguments => [
-			x => 1,
-			y => 2,
-			z => 3,
-			color => "shiny",
-		],
-	),
-)->();
+t::stats->finish("meta_calc");
+
+t::stats->start("dispatch");
 
 is(
-	$colorful_point3d_obj_box->responder_interface->dispatch(
-		$colorful_point3d_obj_box,
-		MO::Run::Invocation::Method->new( name => "color", arguments => [ ] ),
-	)->(),
+	MO::Run::Aux::method_call( $colorful_point3d_obj_box, "color" ),
 	"shiny",
 	"point.color",
 );
 
-$colorful_point3d_obj_box->responder_interface->dispatch(
-	$colorful_point3d_obj_box,
-	MO::Run::Invocation::Method->new( name => "color", arguments => [ "orange" ] ),
-)->(),
+MO::Run::Aux::method_call( $colorful_point3d_obj_box, "color", "orange" );
 
 is(
-	$colorful_point3d_obj_box->responder_interface->dispatch(
-		$colorful_point3d_obj_box,
-		MO::Run::Invocation::Method->new( name => "color", arguments => [ ] ),
-	)->(),
+	MO::Run::Aux::method_call( $colorful_point3d_obj_box, "color" ),
 	"orange",
 	"point.color",
 );
 
+t::stats->finish(qw/dispatch runtime/);
