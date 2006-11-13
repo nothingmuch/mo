@@ -5,17 +5,9 @@ package MO::Run::Aux;
 use strict;
 use warnings;
 
-use MO::Run::Responder::Invocant;
-use MO::Run::Invocation::Method;
-use MO::Run::Aux::Stack;
-
 use Scalar::Util qw/blessed/;
 
 use Tie::RefHash;
-
-use Sub::Exporter -setup => {
-	exports => [qw/box unbox_value stack method_call/],
-};
 
 our $MO_NATIVE_RUNTIME                 = $ENV{MO_NATIVE_RUNTIME};
 our $MO_NATIVE_RUNTIME_NO_INDIRECT_BOX = $ENV{MO_NATIVE_RUNTIME_NO_INDIRECT_BOX};
@@ -40,11 +32,23 @@ sub registry {
 	$REGISTRY ||= _setup_registry();
 }
 
+sub _pre_box {
+	my $ri = shift;
+
+	if ( $MO_NATIVE_RUNTIME) {
+		return _responder_interface_to_package($ri);
+	} else {
+		return $ri;
+	}
+}
+
 sub box ($$) {
 	my ( $instance, $responder_interface ) = @_;
 
 	if ( $MO_NATIVE_RUNTIME ) {
-		my $pkg = _responder_interface_to_package($responder_interface);
+		my $pkg = ref $responder_interface
+			? _responder_interface_to_package($responder_interface)
+			: $responder_interface;
 
 		local $@;
 		if ( eval { $instance->does("MO::Compile::Origin") } ) {
@@ -57,6 +61,7 @@ sub box ($$) {
 			return bless $box, $pkg;
 		}
 	} else {
+		require MO::Run::Responder::Invocant;
 		MO::Run::Responder::Invocant->new(
 			invocant => $instance,
 			responder_interface => $responder_interface,
@@ -86,6 +91,7 @@ sub stack (;@) {
 	if ( @_ ) {
 		return $STACK = shift;
 	} else {
+		reuire MO::Run::Aux::Stack;
 		return $STACK ||= MO::Run::Aux::Stack->new;
 	}
 }
@@ -109,6 +115,7 @@ sub method_call ($$;@) {
 			my $body = $method->body;
 			$invocant->$body( @arguments );
 		} else {
+			require MO::Run::Invocation::Method;
 			my $thunk = $ri->dispatch(
 				$invocant,
 				MO::Run::Invocation::Method->new(

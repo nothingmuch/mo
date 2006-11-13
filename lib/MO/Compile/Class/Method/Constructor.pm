@@ -42,6 +42,16 @@ sub compile {
 	my @initializers        = $self->initializers;
 	my $responder_interface = $self->responder_interface;
 
+	#####
+	# FIXME hacks to clean up the closure
+	my $box_arg = MO::Run::Aux::_pre_box($responder_interface);
+	$layout->{class} = undef;
+	delete @{ $_ }{qw/target origin/} for
+		@initializers,
+		$layout->fields,
+		(map { $_->field } map { $_->slots } @initializers);
+	#####
+
 	return MO::Compile::Method::Simple::Compiled->new(
 		body => sub {
 			my ( $class, %params ) = @_;
@@ -52,7 +62,7 @@ sub compile {
 
 			my $object = $layout->create_instance_structure( fields => \@fields );
 
-			my $boxed = MO::Run::Aux::box( $object, $responder_interface );
+			my $boxed = MO::Run::Aux::box( $object, $box_arg );
 
 			$_->initialize_instance( $boxed, \%params ) for grep { $_->can("initialize_instance") } @initializers;
 

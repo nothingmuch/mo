@@ -41,7 +41,7 @@ sub merge_class_and_instance_interfaces {
 	my ( $class, $instance, $meta, $registry ) = @params{qw/class_interface instance_interface class registry/};
 
 	my %methods;
-	foreach my $method ( keys %$class, %$instance ) {
+	foreach my $method ( keys %$class, keys %$instance ) {
 		$methods{$method} ||= $self->merge_class_and_instance_method(
 			$method,
 			$class->{$method},
