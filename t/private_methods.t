@@ -10,7 +10,7 @@ use ok "MO::Compile::Method::Simple";
 use ok "MO::Run::Invocation::Method";
 use ok "MO::Run::Responder::Invocant";
 use ok "MO::Run::Aux::Stack";
-use ok "MO::Aux";
+use ok "MO::Run::Aux";
 
 $MO::Run::MO_NATIVE_RUNTIME = 0;
 
