@@ -3,24 +3,75 @@
 package MO::Emit::P5;
 use Moose;
 
-sub responder_interface_to_package {
+use Carp qw/croak/;
+
+# TODO
+# @ISA
+# 'can' is context sensitive
+# optimize when @ISA and parent already contains the exact same method by the same name
+# MRO within the responder interfaces
+# (do they handle next, etc?)
+
+sub emit_class {
+	my ( $self, @params ) = @_;
+	my $cv_hash = $self->class_to_cv_hash( @params );
+	$self->install_cv_hash( @params, hash => $cv_hash );
+}
+
+sub class_to_cv_hash {
+	my ( $self, %params ) = @_;
+	my $class = $params{class};
+
+	my ( $class_interface, $instance_interface ) = map {
+		$self->responder_interface_to_cv_hash(
+			%params,
+			responder_interface => $class->$_()
+		);
+	} qw/class_interface instance_interface/;
+	
+	return $self->merge_class_and_instance_interfaces(
+		%params,
+		class_interface    => $class_interface,
+		instance_interface => $instance_interface,
+	);
+}
+
+sub merge_class_and_instance_interfaces {
+	my ( $self, %params ) = @_;
+	my ( $class, $instance, $meta, $registry ) = @params{qw/class_interface instance_interface class registry/};
+
+	my %methods;
+	foreach my $method ( keys %$class, %$instance ) {
+		$methods{$method} ||= $self->merge_class_and_instance_method(
+			$method,
+			$class->{$method},
+			$instance->{$method},
+			%params,
+		);
+	}
+
+	return \%methods;
+}
+
+# FIXME cache?
+sub merge_class_and_instance_method {
+	my ( $self, $name, $class, $instance, %params ) = @_;
+
+	$class    ||= sub { croak "The method '$name' can only be used as an instance method" };
+	$instance ||= sub { croak "The method '$name' can only be used as a class method" };
+
+	sub { goto ref($_[0]) ? $instance : $class };
+}
+
+sub responder_interface_to_cv_hash {
 	my ( $self, %params ) = @_;
 
 	if ( $params{responder_interface}->isa("MO::Run::ResponderInterface::Multiplexed::ByCaller") ) {
-		$self->bycaller_to_package( %params );
+		return $self->bycaller_to_cv_hash( %params );
 	} else {
 		die "Dunno how to emit $params{responder_interface}" unless $params{responder_interface}->isa("MO::Run::ResponderInterface::MethodTable");
-
-		$self->method_table_to_package( %params );
+		return $self->method_table_to_cv_hash( %params );
 	}
-}
-
-sub bycaller_to_package {
-	my ( $self, @params ) = @_;
-
-	my $hash = $self->bycaller_to_cv_hash( @params );
-
-	$self->install_cv_hash( @params, hash => $hash );
 }
 
 sub bycaller_to_cv_hash {
@@ -59,10 +110,9 @@ sub merge_methods_by_caller {
 	if ( my $public = delete $caller_table->{public} ) {
 		sub { goto $caller_table->{MO::Run::Aux::caller()} || $public }
 	} else {
-		require Carp;
 		sub {
 			goto $caller_table->{MO::Run::Aux::caller() } ||
-				Carp::croak qq{Can't locate object method "$name" via package "} . (ref($_[0]) || $_[0]) . '"';
+				croak qq{Can't locate object method "$name" via package "} . (ref($_[0]) || $_[0]) . '"';
 		};
 	}
 }
@@ -75,21 +125,18 @@ sub _bycaller_register_table {
 	}
 }
 
-sub method_table_to_package {
-	my ( $self, @params ) = @_;
-
-	my $hash = $self->method_table_to_cv_hash( @params );
-
-	$self->install_cv_hash( @params, hash => $hash );
-}
-
 sub install_cv_hash {
 	my ( $self, %params ) = @_;
 	my ( $hash, $package ) = @params{qw/hash package/};
 
+	my $class = $params{class};
+
+	my @isa = map { $params{registry}->autovivify_class($_) } $class->superclasses;
+
+	$package->add_package_symbol( '@ISA', \@isa );
+
 	foreach my $method ( keys %$hash ) {
-		no strict 'refs';
-		*{"${package}::${method}"} = $hash->{$method};
+		$package->add_package_symbol( '&'. $method, $hash->{$method} );
 	}
 }
 

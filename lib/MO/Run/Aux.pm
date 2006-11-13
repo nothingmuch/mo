@@ -20,31 +20,24 @@ use Sub::Exporter -setup => {
 our $MO_NATIVE_RUNTIME                 = $ENV{MO_NATIVE_RUNTIME};
 our $MO_NATIVE_RUNTIME_NO_INDIRECT_BOX = $ENV{MO_NATIVE_RUNTIME_NO_INDIRECT_BOX};
 our $STACK;
-our $EMITTER;
 our $PACKAGE_SEQUENCE = "A";
-tie our %RI_TO_PKG, 'Tie::RefHash';
-our %PKG_TO_RI;
+our $REGISTRY;
 
 sub _responder_interface_to_package {
 	my $responder_interface = shift;
 
-	my $pkg = $RI_TO_PKG{$responder_interface} ||= "MO::Run::Aux::ANON_" . $PACKAGE_SEQUENCE++;
-
-	$PKG_TO_RI{$pkg} = $responder_interface;
-
-	$EMITTER ||= _setup_emitter();
-
-	$EMITTER->responder_interface_to_package(
-		responder_interface => $responder_interface,
-		package             => $pkg,
-	);
-
-	return $pkg;
+	return registry()->autovivify_class( $responder_interface->origin );
 }
 
-sub _setup_emitter {
-	require MO::Emit::P5;
-	MO::Emit::P5->new;
+sub _generate_package_name { "MO::Run::Aux::ANON_" . $PACKAGE_SEQUENCE++ }
+
+sub _setup_registry {
+	require MO::P5::Registry;
+	MO::P5::Registry->new;
+}
+
+sub registry {
+	$REGISTRY ||= _setup_registry();
 }
 
 sub box ($$) {
@@ -53,11 +46,16 @@ sub box ($$) {
 	if ( $MO_NATIVE_RUNTIME ) {
 		my $pkg = _responder_interface_to_package($responder_interface);
 
-		my $box = $MO_NATIVE_RUNTIME_NO_INDIRECT_BOX
-			? $instance
-			: \$instance;
+		local $@;
+		if ( eval { $instance->does("MO::Compile::Origin") } ) {
+			return $pkg;
+		} else {
+			my $box = $MO_NATIVE_RUNTIME_NO_INDIRECT_BOX
+				? $instance
+				: \$instance;
 
-		return bless $box, $pkg;
+			return bless $box, $pkg;
+		}
 	} else {
 		MO::Run::Responder::Invocant->new(
 			invocant => $instance,
@@ -70,10 +68,14 @@ sub unbox_value ($) {
 	my $responder = shift;
 
 	if ( $MO_NATIVE_RUNTIME ) {
-		if ( $MO_NATIVE_RUNTIME_NO_INDIRECT_BOX ) {
-			return $responder;
+		if ( ref $responder ) {
+			if ( $MO_NATIVE_RUNTIME_NO_INDIRECT_BOX ) {
+				return $responder;
+			} else {
+				return $$responder;
+			}
 		} else {
-			return $$responder;
+			return $REGISTRY->class_of_package( $responder );
 		}
 	} else {
 		return $responder->invocant;
@@ -127,8 +129,8 @@ sub caller {
 	if ( $MO_NATIVE_RUNTIME ) {
 		my $package = ( CORE::caller(shift || 0 + 1) )[0];
 
-		if ( my $ri = $PKG_TO_RI{$package} ) {
-			return $ri->origin;
+		if ( my $class = $REGISTRY->class_of_package( $package ) ) {
+			return $class;
 		} else {
 			return $package;
 		}
