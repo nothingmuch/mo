@@ -91,7 +91,7 @@ sub stack (;@) {
 	if ( @_ ) {
 		return $STACK = shift;
 	} else {
-		reuire MO::Run::Aux::Stack;
+		require MO::Run::Aux::Stack;
 		return $STACK ||= MO::Run::Aux::Stack->new;
 	}
 }
