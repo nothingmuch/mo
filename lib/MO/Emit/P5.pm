@@ -139,16 +139,20 @@ sub _bycaller_register_table {
 
 sub install_cv_hash {
 	my ( $self, %params ) = @_;
-	my ( $hash, $package ) = @params{qw/hash package/};
+	my ( $hash, $package_obj ) = @params{qw/hash package/};
 
 	my $class = $params{class};
 
 	my @isa = map { $params{registry}->autovivify_class($_) } $class->superclasses;
 
-	$package->add_package_symbol( '@ISA', \@isa );
+	$package_obj->add_package_symbol( '@ISA', \@isa );
+
+	my $package = $package_obj->name;
 
 	foreach my $method ( keys %$hash ) {
-		$package->add_package_symbol( '&'. $method, $hash->{$method} );
+		my $inherited = $package->UNIVERSAL::can($method); # explicitly UNIVERSAL::can, since we care about native disptach
+		next if $inherited and $inherited == $hash->{$method};
+		$package_obj->add_package_symbol( '&'. $method, $hash->{$method} );
 	}
 }
 
@@ -198,7 +202,7 @@ sub constructor_to_cv {
 
 	my @initializer_fields = map { $_->slot->name } @initializers;
 
-	return eval q#sub {
+	return $cache{$method} ||= eval q#sub {
 		my ( $class, %params ) = @_;
 
 		my $struct = {};
@@ -220,7 +224,7 @@ sub accessor_to_cv {
 
 	my $name = $slot->name;
 
-	return eval q#sub {
+	return $cache{"accessor:$name"} ||= eval q#sub {
 		my ( $self, @args ) = @_;
 		$self = $$self unless $MO::Run::Aux::MO_NATIVE_RUNTIME_NO_INDIRECT_BOX;
 		$self->{"# . $name . q#"} = $args[0] if @args;

@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-package Point;
+package Point3D;
 
 use strict;
 use warnings;
@@ -13,14 +13,14 @@ use MO::Compile::Class::MI;
 use MO::Compile::Attribute::Simple;
 use MO::Compile::Method::Simple;
 
+use Point ();
+
 MO::Run::Aux::registry()->register_class(
 	MO::Compile::Class::MI->new(
+		superclasses => [ MO::Run::Aux::registry()->class_of_package("Point") ],
 		attributes => [
 			MO::Compile::Attribute::Simple->new(
-				name => "x",
-			),
-			MO::Compile::Attribute::Simple->new(
-				name => "y",
+				name => "z",
 			),
 		],
 		instance_methods => [
@@ -28,7 +28,10 @@ MO::Run::Aux::registry()->register_class(
 				name => "distance",
 				definition => sub {
 					my ( $self, $other ) = @_;
-					sqrt( ( abs( $self->x - $other->x ) ** 2 ) + ( abs( $self->y - $other->y ) ** 2 ) );
+
+					my $two_dim_distance = $self->SUPER::distance( $other );
+
+					sqrt( ( $two_dim_distance ** 2 ) + ( abs( $self->z - $other->z ) ** 2 ) );
 				},
 			),
 		],
@@ -40,3 +43,4 @@ MO::Run::Aux::registry()->register_class(
 MO::Run::Aux::registry()->emit_all_classes();
 
 MO::Run::Aux::compile_pmc();
+

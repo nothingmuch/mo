@@ -146,6 +146,36 @@ sub caller {
 	}
 }
 
+sub compile_pmc {
+	require Generate::PMC::File;
+	require Data::Dump::Streamer;
+
+	my ( $pkg, $file ) = CORE::caller();
+
+	my $glob = do { no strict 'refs'; *{"::" . $pkg . "::"} };
+
+	# indentation clashes with the prettier sub decls
+	my $src = Data::Dump::Streamer::Dump($glob)->Indent(0)->Out;
+
+	# we don't really need this
+	$src =~ s{ \$VAR1 \s* = .*? \n \*{'::${pkg}::'} \s* = .*? ;\n }{}sx;
+
+	# sub decls can be a bit prettier
+	$src =~ s{ ^ \* (?:${pkg}::)? ([\w:]+) \s* = \s* sub }{\nsub $1}gmx;
+
+	Generate::PMC::File->new(
+		input_file              => $file,
+		include_freshness_check => 0,
+		body                    => [ join "\n\n",
+			"package $pkg;",
+			'BEGIN { $MO::Run::Aux::MO_NATIVE_RUNTIME = 1 }',
+			$src,
+			'1;',
+			'',
+		],
+	)->write_pmc();
+}
+
 __PACKAGE__;
 
 __END__
