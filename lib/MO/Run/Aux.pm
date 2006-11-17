@@ -160,8 +160,11 @@ sub compile_pmc {
 	# we don't really need this
 	$src =~ s{ \$VAR1 \s* = .*? \n \*{'::${pkg}::'} \s* = .*? ;\n }{}sx;
 
+	# we already have a package decl, we don't need more
+	$src =~ s{ ^ \* ${pkg}:: (\w+) \b }{*$1}gmx;
+
 	# sub decls can be a bit prettier
-	$src =~ s{ ^ \* (?:${pkg}::)? ([\w:]+) \s* = \s* sub }{\nsub $1}gmx;
+	$src =~ s{ ^ \* ([\w:]+) \s* = \s* sub }{\nsub $1}gmx;
 
 	Generate::PMC::File->new(
 		input_file              => $file,
