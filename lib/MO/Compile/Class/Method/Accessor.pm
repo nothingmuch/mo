@@ -38,7 +38,8 @@ sub compile {
 	#####
 
 	return MO::Compile::Method::Simple::Compiled->new(
-		body => sub	{
+		method => $self,
+		body   => sub {
 			my ( $instance, @args ) = @_;
 
 			my $structure = MO::Run::Aux::unbox_value($instance);

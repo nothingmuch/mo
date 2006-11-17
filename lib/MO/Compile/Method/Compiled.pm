@@ -1,8 +1,13 @@
 #!/usr/bin/perl
 
 package MO::Compile::Method::Compiled;
-use Moose;
+use Moose::Role;
 use Moose::Util::TypeConstraints;
+
+has method => (
+	does => "MO::Compile::Method",
+	is   => "ro",
+);
 
 coerce "MO::Compile::Method::Compiled" => (
 	from "CodeRef" => via {

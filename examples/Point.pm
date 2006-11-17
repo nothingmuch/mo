@@ -42,27 +42,30 @@ MO::Run::Aux::registry()->emit_all_classes();
 use Generate::PMC::File;
 use Data::Dump::Streamer ();
 
-no strict 'refs';
+{
+	my $pkg = __PACKAGE__;
 
-Generate::PMC::File->new(
-	input_file              => __FILE__,
-	include_freshness_check => 0,
-	body                    => [
-		<<'PRELUDE',
-# registry blah etc, "macros" used inside generated routines
-use MO::Run::Aux;
+	my $glob = do { no strict 'refs'; *{"::" . __PACKAGE__ . "::"} };
 
-# make the "macros" work with native perl OO semantics
-BEGIN { $MO::Run::Aux::MO_NATIVE_RUNTIME = 1 }
+	# indentation clashes with the prettier sub decls
+	my $src = Data::Dump::Streamer::Dump($glob)->Indent(0)->Out;
 
-# needed for constructor, accessors
-# these can go away with codegen
-use MO::Compile::Class::Layout::Hash;
-use MO::Compile::Field::Simple;
-use MO::Compile::Attribute::Simple; # initializers
+	# we don't really need this
+	$src =~ s{ \$VAR1 \s* = .*? \n \*{'::${pkg}::'} \s* = .*? ;\n }{}sx;
 
-PRELUDE
-		Data::Dump::Streamer::Dump(*{"::" . __PACKAGE__ . "::"})->Out
-	],
-)->write_pmc();
+	# sub decls can be a bit prettier
+	$src =~ s{ ^ \* (?:${pkg}::)? ([\w:]+) \s* = \s* sub }{\nsub $1}gmx;
+
+	Generate::PMC::File->new(
+		input_file              => __FILE__,
+		include_freshness_check => 0,
+		body                    => [ join "\n\n",
+			"package $pkg;",
+			'BEGIN { $MO::Run::Aux::MO_NATIVE_RUNTIME = 1 }',
+			$src,
+			'1;',
+			'',
+		],
+	)->write_pmc();
+}
 

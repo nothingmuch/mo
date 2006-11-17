@@ -53,14 +53,26 @@ sub merge_class_and_instance_interfaces {
 	return \%methods;
 }
 
-# FIXME cache?
+my %cache;
+
 sub merge_class_and_instance_method {
-	my ( $self, $name, $class, $instance, %params ) = @_;
+	my ( $self, $name, $class_method, $instance_method, %params ) = @_;
 
-	$class    ||= sub { croak "The method '$name' can only be used as an instance method" };
-	$instance ||= sub { croak "The method '$name' can only be used as a class method" };
+	unless ( $class_method ) {
+		return $cache{$instance_method} ||= eval q#sub {
+			croak "The method '# . $name . q#' can only be used as an instance method" unless ref $_[0];
+			goto $instance_method;
+		}#;
+	}
 
-	sub { goto ref($_[0]) ? $instance : $class };
+	unless ( $instance_method ) {
+		return $cache{$class_method} ||= eval q#sub {
+			croak "The method '# . $name . q#' can only be used as a class method" if ref $_[0];
+			goto $class_method;
+		}#;
+	}
+
+	return $cache{$instance_method . "/" . $class_method} ||= sub { goto ref($_[0]) ? $instance_method : $class_method };
 }
 
 sub responder_interface_to_cv_hash {
@@ -148,9 +160,72 @@ sub method_table_to_cv_hash {
 
 	my %methods;
 
-	@methods{ keys %$methods } = map { $_->body } values %$methods;
+	@methods{ keys %$methods } = map { $self->method_to_cv($_) } values %$methods;
 
 	return \%methods;
+}
+
+sub method_to_cv {
+	my ( $self, $method ) = @_;
+
+	if ( my $original = $method->method ) {
+		if ( $original->isa("MO::Compile::Class::Method::Constructor") ) {
+			if ( my $cv = $self->constructor_to_cv($original) ) {
+				return $cv;
+			}
+		} elsif( $original->isa("MO::Compile::Class::Method::Accessor") ) {
+			if ( my $cv = $self->accessor_to_cv($original) ) {
+				return $cv;
+			}
+		}
+	}
+
+	return $method->body;
+}
+
+# inlined versions of std accessor and constructor
+
+sub constructor_to_cv {
+	my ( $self, $method ) = @_;
+
+	my $layout = $method->layout;
+	return unless $layout->isa("MO::Compile::Class::Layout::Hash");
+
+	my @initializers = $method->initializers;
+	return if grep { not $_->isa("MO::Compile::Attribute::Simple::Compiled") } @initializers;
+
+	my $pkg = MO::Run::Aux::_pre_box($method->responder_interface);
+
+	my @initializer_fields = map { $_->slot->name } @initializers;
+
+	return eval q#sub {
+		my ( $class, %params ) = @_;
+
+		my $struct = {};
+
+		@{ $struct }{qw(# . "@initializer_fields" . q#)} = @params{qw(# . "@initializer_fields" . q#)};
+
+		return bless(
+			( $MO::Run::Aux::MO_NATIVE_RUNTIME_NO_INDIRECT_BOX ? $struct : \$struct ),
+			$class
+		);
+	}# || die "error in eval: $@";
+}
+
+sub accessor_to_cv {
+	my ( $self, $method ) = @_;
+
+	my $slot = $method->slot;
+	return unless $slot->isa("MO::Compile::Slot::HashElement");
+
+	my $name = $slot->name;
+
+	return eval q#sub {
+		my ( $self, @args ) = @_;
+		$self = $$self unless $MO::Run::Aux::MO_NATIVE_RUNTIME_NO_INDIRECT_BOX;
+		$self->{"# . $name . q#"} = $args[0] if @args;
+		$self->{"# . $name . q#"};
+	}# || die "error in eval: $@";
 }
 
 __PACKAGE__;

@@ -53,7 +53,8 @@ sub compile {
 	#####
 
 	return MO::Compile::Method::Simple::Compiled->new(
-		body => sub {
+		method => $self,
+		body   => sub {
 			my ( $class, %params ) = @_;
 
 			my @fields;

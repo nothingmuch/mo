@@ -3,7 +3,7 @@
 package MO::Compile::Method::Simple::Compiled;
 use Moose;
 
-extends "MO::Compile::Method::Compiled";
+with "MO::Compile::Method::Compiled";
 
 has body => (
 	isa => "CodeRef",
