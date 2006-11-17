@@ -18,10 +18,11 @@ use ok 'MO::Compile::Attribute::Simple';
 use ok 'MO::Compile::Method::Simple';
 use ok 'MO::Run::Responder::Invocant';
 use ok 'MO::Run::Invocation::Method';
-use ok 'MO::Run::Aux' => qw/method_call/;
+use ok 'MO::Run::Aux';
 
 # a shorthand form for invoking named methods
 # like the -> operator
+*method_call = \&MO::Run::Aux::method_call;
 
 my $avg_diff_ag = MO::Compile::AttributeGrammar->new(
 	root_attributes => [
