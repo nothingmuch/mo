@@ -181,6 +181,7 @@ sub load_pmc_meta {
 
 	# FIXME Sub::Uplevel?
 	eval "#line 1 $INC{$file}\n" . do { local (@ARGV, $/) = $INC{$file}; <> }; # FIXME YUCKYUKCYUCKCKCKCKC
+	die $@ if $@;
 }
 
 sub create_package_object {
