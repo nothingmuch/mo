@@ -44,3 +44,5 @@ MO::Run::Aux::registry()->emit_all_classes();
 
 MO::Run::Aux::compile_pmc();
 
+1;
+
