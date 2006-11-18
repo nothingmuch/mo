@@ -19,6 +19,12 @@ has classes_inverted => (
 	default => sub { tie my %h, "Tie::RefHash"; \%h },
 );
 
+has pmc_classes => (
+	isa => "HashRef",
+	is  => "rw",
+	default => sub { return {} },
+);
+
 has packages => (
 	isa => "HashRef",
 	is  => "rw",
@@ -71,6 +77,7 @@ sub package_of_class {
 
 sub class_of_package {
 	my ( $self, $pkg ) = @_;
+	$self->load_pmc_meta($pkg);
 	$self->classes->{$pkg};
 }
 
@@ -84,7 +91,7 @@ sub emit_all_classes {
 
 	foreach my $pkg ( keys %{ $self->packages } ) {
 		my $class = $self->classes->{$pkg};
-		next if $self->emitted->{$class}++;
+		next if $self->pmc_classes->{$pkg} or $self->emitted->{$class}++;
 
 		my $pkg_obj = $self->packages->{$pkg};
 
@@ -126,6 +133,22 @@ sub register_class {
 		my $code = do { no warnings; UNIVERSAL::can( $_[0], $method ) };
 		goto $code;
 	});
+}
+
+sub register_pmc_class {
+	my ( $self, $pkg ) = @_;
+
+	$self->pmc_classes->{$pkg}++;
+}
+
+sub load_pmc_meta {
+	my ( $self, $pkg ) = @_;
+	return if $self->packages->{$pkg};
+	return unless $self->pmc_classes->{$pkg};
+
+	(my $file = "${pkg}.pm") =~ s{::}{/}g;
+
+	eval "#line 1 $INC{$file}\n" . do { local $/; open my $fh, "<", $INC{$file}; <$fh> }; # FIXME YUCKYUKCYUCKCKCKCKC
 }
 
 sub create_package_object {

@@ -15,6 +15,8 @@ our $STACK;
 our $PACKAGE_SEQUENCE = "A";
 our $REGISTRY;
 
+my (@pmc_classes, %pmc_classes);
+
 sub _responder_interface_to_package {
 	my $responder_interface = shift;
 
@@ -25,7 +27,12 @@ sub _generate_package_name { "MO::Run::Aux::ANON_" . $PACKAGE_SEQUENCE++ }
 
 sub _setup_registry {
 	require MO::P5::Registry;
-	MO::P5::Registry->new;
+	my $registry = MO::P5::Registry->new;
+
+	$registry->register_pmc_class($_) for @pmc_classes;
+	@pmc_classes = ();
+
+	return $registry;
 }
 
 sub registry {
@@ -147,12 +154,16 @@ sub caller {
 }
 
 sub compile_pmc {
+	my ( $pkg, $file ) = CORE::caller();
+
+	return if $pmc_classes{$pkg};
+
 	require Generate::PMC::File;
 	require Data::Dump::Streamer;
 
-	my ( $pkg, $file ) = CORE::caller();
-
 	my $glob = do { no strict 'refs'; *{"::" . $pkg . "::"} };
+
+	my @ISA = do { no strict 'refs'; @{"${pkg}::ISA"} };
 
 	# indentation clashes with the prettier sub decls
 	my $src = Data::Dump::Streamer::Dump($glob)->Indent(0)->Out;
@@ -166,17 +177,35 @@ sub compile_pmc {
 	# sub decls can be a bit prettier
 	$src =~ s{ ^ \* ([\w:]+) \s* = \s* sub }{\nsub $1}gmx;
 
+	# we're emitting a use base line
+	$src =~ s{ ^ \* ISA .*? \n }{}gmx;
+
 	Generate::PMC::File->new(
 		input_file              => $file,
 		include_freshness_check => 0,
 		body                    => [ join "\n\n",
 			"package $pkg;",
+			( @ISA ? "use base qw(@ISA);" : () ),
+			'use MO::Run::Aux;',
 			'BEGIN { $MO::Run::Aux::MO_NATIVE_RUNTIME = 1 }',
+			'MO::Run::Aux::register_pmc_class(__PACKAGE__);',
 			$src,
 			'1;',
 			'',
 		],
 	)->write_pmc();
+}
+
+sub register_pmc_class {
+	my ( $pkg ) = @_;
+
+	$pmc_classes{$pkg}++;
+
+	if ( $REGISTRY ) {
+		$REGISTRY->register_pmc_class($pkg);
+	} else {
+		push @pmc_classes, $pkg;
+	}
 }
 
 __PACKAGE__;
