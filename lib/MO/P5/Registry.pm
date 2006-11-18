@@ -148,7 +148,7 @@ sub load_pmc_meta {
 
 	(my $file = "${pkg}.pm") =~ s{::}{/}g;
 
-	eval "#line 1 $INC{$file}\n" . do { local $/; open my $fh, "<", $INC{$file}; <$fh> }; # FIXME YUCKYUKCYUCKCKCKCKC
+	eval "#line 1 $INC{$file}\n" . do { local (@ARGV, $/) = $INC{$file}; <> }; # FIXME YUCKYUKCYUCKCKCKCKC
 }
 
 sub create_package_object {
