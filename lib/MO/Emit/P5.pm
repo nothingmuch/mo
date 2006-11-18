@@ -211,7 +211,7 @@ sub constructor_to_cv {
 		@{ $struct }{qw(# . "@initializer_fields" . q#)} = @params{qw(# . "@initializer_fields" . q#)};
 
 		return bless(
-			( $MO::Run::Aux::MO_NATIVE_RUNTIME_NO_INDIRECT_BOX ? $struct : \$struct ),
+			( MO::Run::Aux::MO_NATIVE_RUNTIME_NO_INDIRECT_BOX ? $struct : \$struct ),
 			$class
 		);
 	}# || die "error in eval: $@";
@@ -227,7 +227,7 @@ sub accessor_to_cv {
 
 	return $cache{"accessor:$name"} ||= eval q#sub {
 		my ( $self, @args ) = @_;
-		$self = $$self unless $MO::Run::Aux::MO_NATIVE_RUNTIME_NO_INDIRECT_BOX;
+		$self = $$self unless MO::Run::Aux::MO_NATIVE_RUNTIME_NO_INDIRECT_BOX;
 		$self->{"# . $name . q#"} = $args[0] if @args;
 		$self->{"# . $name . q#"};
 	}# || die "error in eval: $@";

@@ -5,9 +5,9 @@ package Point3D;
 use strict;
 use warnings;
 
-use MO::Run::Aux;
-
 BEGIN { $MO::Run::Aux::MO_NATIVE_RUNTIME = 1 }
+
+use MO::Run::Aux;
 
 use MO::Compile::Class::MI;
 use MO::Compile::Attribute::Simple;

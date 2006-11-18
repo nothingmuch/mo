@@ -5,8 +5,14 @@ package MO::Run::Aux;
 use strict;
 use warnings;
 
-our $MO_NATIVE_RUNTIME                 = $ENV{MO_NATIVE_RUNTIME};
-our $MO_NATIVE_RUNTIME_NO_INDIRECT_BOX = $ENV{MO_NATIVE_RUNTIME_NO_INDIRECT_BOX};
+BEGIN {
+	no strict 'refs';
+	foreach my $name (qw/MO_NATIVE_RUNTIME MO_NATIVE_RUNTIME_NO_INDIRECT_BOX/) {
+		next if defined *{$name}{CODE};
+		*$name = (${$name} || $ENV{$name}) ? sub () { 1 } : sub () { 0 };
+	}
+}
+
 our $STACK;
 our $PACKAGE_SEQUENCE = "A";
 our $REGISTRY;
@@ -38,7 +44,7 @@ sub registry {
 sub _pre_box {
 	my $ri = shift;
 
-	if ( $MO_NATIVE_RUNTIME) {
+	if ( MO_NATIVE_RUNTIME) {
 		return _responder_interface_to_package($ri);
 	} else {
 		return $ri;
@@ -48,7 +54,7 @@ sub _pre_box {
 sub box ($$) {
 	my ( $instance, $responder_interface ) = @_;
 
-	if ( $MO_NATIVE_RUNTIME ) {
+	if ( MO_NATIVE_RUNTIME ) {
 		my $pkg = ref $responder_interface
 			? _responder_interface_to_package($responder_interface)
 			: $responder_interface;
@@ -57,7 +63,7 @@ sub box ($$) {
 		if ( eval { $instance->does("MO::Compile::Origin") } ) {
 			return $pkg;
 		} else {
-			my $box = $MO_NATIVE_RUNTIME_NO_INDIRECT_BOX
+			my $box = MO_NATIVE_RUNTIME_NO_INDIRECT_BOX
 				? $instance
 				: \$instance;
 
@@ -75,9 +81,9 @@ sub box ($$) {
 sub unbox_value ($) {
 	my $responder = shift;
 
-	if ( $MO_NATIVE_RUNTIME ) {
+	if ( MO_NATIVE_RUNTIME ) {
 		if ( ref $responder ) {
-			if ( $MO_NATIVE_RUNTIME_NO_INDIRECT_BOX ) {
+			if ( MO_NATIVE_RUNTIME_NO_INDIRECT_BOX ) {
 				return $responder;
 			} else {
 				return $$responder;
@@ -102,7 +108,7 @@ sub stack (;@) {
 sub method_call ($$;@) {
 	my ( $invocant, $method, @arguments ) = @_;
 
-	if ( $MO_NATIVE_RUNTIME ) {
+	if ( MO_NATIVE_RUNTIME ) {
 		return $invocant->$method( @arguments );
 	} else {
 		my $ri;
@@ -138,7 +144,7 @@ sub method_call ($$;@) {
 }
 
 sub caller {
-	if ( $MO_NATIVE_RUNTIME ) {
+	if ( MO_NATIVE_RUNTIME ) {
 		my $package = ( CORE::caller(shift || 0 + 1) )[0];
 
 		if ( my $class = $REGISTRY->class_of_package( $package ) ) {
@@ -184,8 +190,9 @@ sub compile_pmc {
 		body                    => [ join "\n\n",
 			"package $pkg;",
 			( @ISA ? "use base qw(@ISA);" : () ),
+			'sub MO::Run::Aux::MO_NATIVE_RUNTIME () { ' . MO_NATIVE_RUNTIME .' }',
+			'sub MO::Run::Aux::MO_NATIVE_RUNTIME_NO_INDIRECT_BOX () { ' . MO_NATIVE_RUNTIME_NO_INDIRECT_BOX . ' }',
 			'use MO::Run::Aux;',
-			'BEGIN { $MO::Run::Aux::MO_NATIVE_RUNTIME = 1 }',
 			'MO::Run::Aux::register_pmc_class(__PACKAGE__);',
 			$src,
 			'1;',
