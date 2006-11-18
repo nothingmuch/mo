@@ -32,11 +32,6 @@ sub compile {
 
 	my $slot = $self->slot;
 
-	#####
-	# FIXME hacks to clean up the closure
-	delete @{ $slot->field }{qw/target origin/};
-	#####
-
 	return MO::Compile::Method::Simple::Compiled->new(
 		method => $self,
 		body   => sub {
