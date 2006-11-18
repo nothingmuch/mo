@@ -55,7 +55,7 @@ sub clear {
 sub get_frame {
 	my ( $self, $index ) = @_;
 	$index ||= 0;
-	
+
 	return $self->_stack->[ -1 - $index ] || croak "No stack frame at index $index";
 }
 

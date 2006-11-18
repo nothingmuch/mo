@@ -27,7 +27,7 @@ sub class_to_cv_hash {
 			responder_interface => $class->$_()
 		);
 	} qw/class_interface instance_interface/;
-	
+
 	return $self->merge_class_and_instance_interfaces(
 		%params,
 		class_interface    => $class_interface,
@@ -117,7 +117,7 @@ sub bycaller_to_cv_hash {
 
 sub merge_methods_by_caller {
 	my ( $self, $name, $caller_table ) = @_;
-	
+
 	if ( my $public = delete $caller_table->{public} ) {
 		sub { goto $caller_table->{MO::Run::Aux::caller()} || $public }
 	} else {

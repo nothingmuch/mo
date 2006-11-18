@@ -61,12 +61,12 @@ sub autovivify_class {
 
 		$self->emit_all_classes();
 	}
-	
+
 	return $self->package_of_class($class);
 }
 
 sub class_is_registered {
-	my ( $self, $class ) = @_;	
+	my ( $self, $class ) = @_;
 	exists $self->classes_inverted->{$class};
 }
 

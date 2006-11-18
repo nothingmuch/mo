@@ -84,7 +84,7 @@ $MO::Run::Aux::MO_NATIVE_RUNTIME = 1;
 	can_ok( $_, "create_instance" ) for $base_box, $sub_box;
 
 	my $base_obj = $base_box->create_instance;
-	my $sub_obj = $sub_box->create_instance;	
+	my $sub_obj = $sub_box->create_instance;
 
 	isa_ok( $sub_obj, $sub_box );
 	isa_ok( $sub_obj, $base_box );
@@ -180,14 +180,14 @@ $MO::Run::Aux::MO_NATIVE_RUNTIME = 1;
 	$point->x( 3 );
 
 	is( $point->x, 3 );
-	
+
 	{
 		my $point3d_1 = My::Point::3D->create_instance( x => 0, y => 0, z => 0 );
 		my $point3d_2 = My::Point::3D->create_instance( x => 1, y => 0, z => 0 );
 
 		is( $point3d_1->distance( $point3d_2 ), 1, "distance is 1" );
 	}
-	
+
 	{
 		my $point3d_1 = My::Point::3D->create_instance( x => 1, y => 1, z => 0 );
 		my $point3d_2 = My::Point::3D->create_instance( x => 1, y => 1, z => 1 );

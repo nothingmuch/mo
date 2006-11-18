@@ -87,7 +87,7 @@ is_deeply(
 			[ qw/item item2/ ],
 			"stack items after second push",
 		);
-	}		
+	}
 
 	is_deeply(
 		[ $stack->items ],
