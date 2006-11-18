@@ -15,6 +15,7 @@ use Carp qw/croak/;
 sub emit_class {
 	my ( $self, @params ) = @_;
 	my $cv_hash = $self->class_to_cv_hash( @params );
+	$cv_hash->{meta} = sub { MO::Run::Aux::registry()->class_of_package( ref $_[0] or $_[0] ) };
 	$self->install_cv_hash( @params, hash => $cv_hash );
 }
 
