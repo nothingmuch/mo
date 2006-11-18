@@ -186,7 +186,7 @@ sub load_pmc_meta {
 
 sub create_package_object {
 	my ( $self, $package ) = @_;
-	Class::MOP::Package->initialize( $package );
+	Class::MOP::Package->initialize( $self->prefix . $package );
 }
 
 __PACKAGE__;
