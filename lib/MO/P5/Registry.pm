@@ -155,6 +155,31 @@ sub load_pmc_meta {
 
 	(my $file = "${pkg}.pm") =~ s{::}{/}g;
 
+=begin comment
+	# this is more correct but doesn't work
+
+	my @old_inc = @INC;
+	local @INC = sub {
+		my (undef, $file) = @_;
+
+		warn "really really loading: $file";
+
+		my @lines = ( "# line 1 $file\n", do { local @ARGV = $file; <> } );
+
+		@INC = @old_inc; # for subsequent requires
+
+		return sub {
+			$_ = shift @lines;
+			return length( $_ || '');
+		};
+	};
+
+	warn "going to require $file";
+
+	require $INC{$file};
+=cut
+
+	# FIXME Sub::Uplevel?
 	eval "#line 1 $INC{$file}\n" . do { local (@ARGV, $/) = $INC{$file}; <> }; # FIXME YUCKYUKCYUCKCKCKCKC
 }
 
