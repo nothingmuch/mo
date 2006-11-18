@@ -10,6 +10,12 @@ use Carp qw/croak/;
 # MRO within the responder interfaces
 # (do they handle next, etc?)
 
+has strict_class_instance_distinction => (
+	 isa => "Bool",
+	 is  => "rw",
+	 default => 0,
+);
+
 sub emit_class {
 	my ( $self, @params ) = @_;
 	my $cv_hash = $self->class_to_cv_hash( @params );
@@ -58,17 +64,25 @@ sub merge_class_and_instance_method {
 	my ( $self, $name, $class_method, $instance_method, %params ) = @_;
 
 	unless ( $class_method ) {
-		return $cache{$instance_method} ||= eval q#sub {
-			croak "The method '# . $name . q#' can only be used as an instance method" unless ref $_[0];
-			goto $instance_method;
-		}#;
+		if ( $self->strict_class_instance_distinction ) {
+			return $cache{$instance_method} ||= eval q#sub {
+				croak "The method '# . $name . q#' can only be used as an instance method" unless ref $_[0];
+				goto $instance_method;
+			}#;
+		} else {
+			return $instance_method;
+		}
 	}
 
 	unless ( $instance_method ) {
-		return $cache{$class_method} ||= eval q#sub {
-			croak "The method '# . $name . q#' can only be used as a class method" if ref $_[0];
-			goto $class_method;
-		}#;
+		if ( $self->strict_class_instance_distinction ) {
+			return $cache{$class_method} ||= eval q#sub {
+				croak "The method '# . $name . q#' can only be used as a class method" if ref $_[0];
+				goto $class_method;
+			}#;
+		} else {
+			return $class_method;
+		}
 	}
 
 	return $cache{$instance_method . "/" . $class_method} ||= sub { goto ref($_[0]) ? $instance_method : $class_method };
