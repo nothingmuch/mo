@@ -6,9 +6,7 @@ use Moose;
 use Carp qw/croak/;
 
 # TODO
-# @ISA
 # 'can' is context sensitive
-# optimize when @ISA and parent already contains the exact same method by the same name
 # MRO within the responder interfaces
 # (do they handle next, etc?)
 
