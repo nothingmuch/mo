@@ -159,21 +159,31 @@ sub caller {
 
 sub compile_pmc {
 	my ( $pkg, $file ) = CORE::caller();
-
-	return if $pmc_classes{$pkg};
+	$pkg = shift if @_;
+	$file = shift if @_;
 
 	require Generate::PMC::File;
 	require Data::Dump::Streamer;
 
-	my $glob = do { no strict 'refs'; *{"::" . $pkg . "::"} };
+	my ($bootstrap, $stash) = do {
+		no strict 'refs';
+		(\%{"MO::bootstrap::${pkg}::"}, \%{"${pkg}::"});
+	};
+
+	return if $pmc_classes{$pkg} and not %$bootstrap;
+
+	#local
+	%$stash = () if %$bootstrap; # local is not even necessary
+
+	overlay_bootstrap( $stash, $bootstrap, $pkg ) if %$bootstrap;
 
 	my @ISA = do { no strict 'refs'; @{"${pkg}::ISA"} };
 
 	# indentation clashes with the prettier sub decls
-	my $src = Data::Dump::Streamer::Dump($glob)->Indent(0)->Out;
+	my $src = Data::Dump::Streamer::Dump($stash)->Indent(0)->Out;
 
 	# we don't really need this
-	$src =~ s{ \$VAR1 \s* = .*? \n \*{'::${pkg}::'} \s* = .*? ;\n }{}sx;
+	$src =~ s{ ^ \$HASH1 \s* = \s* { .*? } \s* ; \n }{}mx;
 
 	# we already have a package decl, we don't need more
 	$src =~ s{ ^ \* ${pkg}:: (\w+) \b }{*$1}gmx;
@@ -190,8 +200,9 @@ sub compile_pmc {
 		body                    => [ join "\n\n",
 			"package $pkg;",
 			( @ISA ? "use base qw(@ISA);" : () ),
-			'sub MO::Run::Aux::MO_NATIVE_RUNTIME () { ' . MO_NATIVE_RUNTIME .' }',
-			'sub MO::Run::Aux::MO_NATIVE_RUNTIME_NO_INDIRECT_BOX () { ' . MO_NATIVE_RUNTIME_NO_INDIRECT_BOX . ' }',
+			# FIXME, die if inconsistent
+			'BEGIN { $MO::Run::Aux::MO_NATIVE_RUNTIME = ' . MO_NATIVE_RUNTIME .' }',
+			'BEGIN { $MO::Run::Aux::MO_NATIVE_RUNTIME_NO_INDIRECT_BOX = ' . MO_NATIVE_RUNTIME_NO_INDIRECT_BOX . ' }',
 			'use MO::Run::Aux;',
 			'MO::Run::Aux::register_pmc_class(__PACKAGE__);',
 			$src,
@@ -199,6 +210,23 @@ sub compile_pmc {
 			'',
 		],
 	)->write_pmc();
+}
+
+# FIXME needs refactoring
+# probably broken
+# not recursive
+sub overlay_bootstrap {
+	my ( $stash, $bootstrap, $pkg ) = @_;
+
+	foreach my $entry ( keys %$bootstrap ) {
+		no strict 'refs';
+
+		foreach my $slot (qw/CODE ARRAY HASH SCALAR/) {
+			if (my $var = *{ $bootstrap->{$entry} }{$slot}) {
+				*{ "${pkg}::${entry}" } = $var;
+			}
+		}
+	}
 }
 
 sub register_pmc_class {
@@ -211,6 +239,25 @@ sub register_pmc_class {
 	} else {
 		push @pmc_classes, $pkg;
 	}
+}
+
+sub cleanup_moose {
+	my $pkg = CORE::caller;
+
+	my $stash = do { no strict 'refs'; \%{"${pkg}::"} };
+	foreach my $sym (qw/blessed confess inner super VERSION can isa ::ISA::CACHE::/) {
+		delete $stash->{$sym};
+	}
+
+	goto &Moose::unimport;
+}
+
+sub bootstrap {
+	my ( $pkg, $file ) = CORE::caller;
+
+	my $boot = "${file}.boot";
+
+	require $boot;
 }
 
 __PACKAGE__;

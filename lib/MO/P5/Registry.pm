@@ -186,6 +186,7 @@ sub load_pmc_meta {
 
 sub create_package_object {
 	my ( $self, $package ) = @_;
+	$package = "MO::bootstrap::$package" if $package =~ /^MO::/;
 	Class::MOP::Package->initialize( $self->prefix . $package );
 }
 
