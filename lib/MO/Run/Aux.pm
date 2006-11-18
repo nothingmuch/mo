@@ -5,10 +5,6 @@ package MO::Run::Aux;
 use strict;
 use warnings;
 
-use Scalar::Util qw/blessed/;
-
-use Tie::RefHash;
-
 our $MO_NATIVE_RUNTIME                 = $ENV{MO_NATIVE_RUNTIME};
 our $MO_NATIVE_RUNTIME_NO_INDIRECT_BOX = $ENV{MO_NATIVE_RUNTIME_NO_INDIRECT_BOX};
 our $STACK;
@@ -111,7 +107,9 @@ sub method_call ($$;@) {
 	} else {
 		my $ri;
 
-		if ( blessed($arguments[0]) and $arguments[0]->can("does") and $arguments[0]->does("MO::Run::Abstract::ResponderInterface") ) {
+		require Scalar::Util;
+
+		if ( Scalar::Util::blessed($arguments[0]) and $arguments[0]->can("does") and $arguments[0]->does("MO::Run::Abstract::ResponderInterface") ) {
 			$ri = shift @arguments;
 		} else {
 			$ri = $invocant->responder_interface;
