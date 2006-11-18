@@ -123,16 +123,23 @@ sub register_class {
 	$self->classes_inverted->{$class} = $package;
 	$self->classes->{$package} = $class;
 
-	$pkg_obj->add_package_symbol( '&AUTOLOAD' => sub {
-		# let the package spring into existence
-		# this will also remove our AUTOLOAD
-		$self->emit_all_classes();
+	unless ( $self->pmc_classes->{$package} ) {
+		$pkg_obj->add_package_symbol( '&AUTOLOAD' => sub {
+			# let the package spring into existence
+			# this will also remove our AUTOLOAD
+			$self->emit_all_classes();
 
-		# resume native dispatch
-		my ( $method ) = ( our $AUTOLOAD =~ /([^:]+)$/ );
-		my $code = do { no warnings; UNIVERSAL::can( $_[0], $method ) };
-		goto $code;
-	});
+			# resume native dispatch
+			my ( $method ) = ( our $AUTOLOAD =~ /([^:]+)$/ );
+
+			return if $method eq "DESTROY"; # if there is no destroy it isn't an error
+
+			my $code = do { no warnings; UNIVERSAL::can( $_[0], $method ) }
+				or die qq{Can't locate object method "$method" via package "} . (ref($_[0]) || $_[0]) . '"';
+
+			goto $code;
+		});
+	}
 }
 
 sub register_pmc_class {
