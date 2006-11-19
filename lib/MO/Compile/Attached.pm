@@ -5,6 +5,8 @@ use Moose::Role;
 
 requires "attached_item";
 
+requires "origin";
+
 __PACKAGE__;
 
 __END__

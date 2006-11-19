@@ -8,13 +8,14 @@ with qw/
 	MO::Compile::Attached
 /;
 
-BEGIN {
-
+sub origin {}
 has origin => (
 	isa => "Object",
 	is  => "ro",
 	required => 1,
 );
+
+BEGIN {
 
 has method => (
 	does => "MO::Compile::Method",
