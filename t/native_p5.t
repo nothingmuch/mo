@@ -7,6 +7,8 @@ use Test::More 'no_plan';
 
 use Class::Inspector;
 
+BEGIN { $MO::Run::Aux::MO_NATIVE_RUNTIME = 1 }
+
 use ok "MO::Run::Aux";
 use ok "MO::Emit::P5";
 use ok "MO::P5::Registry";
@@ -14,8 +16,6 @@ use ok "MO::Compile::Class::MI";
 use ok "MO::Compile::Attribute::Simple";
 use ok "MO::Compile::Class::Method::Constructor";
 use ok "MO::Compile::Class::Method::Accessor";
-
-$MO::Run::Aux::MO_NATIVE_RUNTIME = 1;
 
 {
 	my $base = MO::Compile::Class::MI->new(
