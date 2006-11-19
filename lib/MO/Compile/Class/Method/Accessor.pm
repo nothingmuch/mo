@@ -21,11 +21,16 @@ has slot => (
 	required => 1,
 );
 
-has attribute => (
+has compiled_attribute => (
 	does => "MO::Compile::Attribute::Compiled",
 	is   => "ro",
 	required => 1,
 );
+
+sub attribute {
+	my $self = shift;
+	$self->compiled_attribute->attribute;
+}
 
 sub compile {
 	my ( $self, %params ) = @_;

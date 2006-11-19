@@ -90,9 +90,9 @@ sub _generate_accessor_method {
 	my $self = shift;
 
 	my $method = MO::Compile::Class::Method::Accessor->new(
-		name      => $self->accessor_name,
-		slot      => $slot,
-		attribute => $self,
+		name               => $self->accessor_name,
+		slot               => $self->slot,
+		compiled_attribute => $self,
 	);
 
 	return $method->attach( $self->origin );
