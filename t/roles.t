@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 use Test::More 'no_plan';
+use Test::Exception;
 
 use ok 'MO::Compile::Class::MI';
 use ok 'MO::Compile::Role';
@@ -256,4 +257,8 @@ use ok 'MO::Compile::Attribute::Simple';
 		[ sort qw/foo bar/ ],
 		"attrs from roles merged",
 	);
+
+	throws_ok {
+		$with_conflict->filter_composition_failures( @methods );
+	} qr/^Composition failures in .*?Symmetric composition error over key 'foo'/s, "composition error thrown";
 }
