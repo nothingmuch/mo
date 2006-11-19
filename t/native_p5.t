@@ -50,7 +50,7 @@ use ok "MO::Compile::Class::Method::Accessor";
 
 	is_deeply(
 		[ sort @{Class::Inspector->methods( ref $obj ) || []} ],
-		[ sort qw/create_instance elk foo/ ],
+		[ sort qw/create_instance elk foo meta/ ],
 		"methods extracted using Class::Inspector",
 	);
 }
