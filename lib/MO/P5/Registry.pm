@@ -82,20 +82,30 @@ sub package_of_class {
 	$self->classes_inverted->{$class};
 }
 
+sub load_package {
+	my ( $self, $package ) = @_;
+	(my $file = "${package}.pm") =~ s{::}{/}g;
+	local $@;
+	eval { require $file };
+}
+
 sub package_to_meta {
 	my ( $self, $pkg ) = @_;
+	$self->load_package($pkg);
 	$self->load_pmc_meta($pkg);
 	$self->classes($pkg) || $self->roles($pkg) || die "No meta for package $pkg";
 }
 
 sub role_of_package {
 	my ( $self, $pkg ) = @_;
+	$self->load_package($pkg);
 	$self->load_pmc_meta($pkg);
 	$self->roles->{$pkg} || die "No meta role for package $pkg";
 }
 
 sub class_of_package {
 	my ( $self, $pkg ) = @_;
+	$self->load_package($pkg);
 	$self->load_pmc_meta($pkg);
 	$self->classes->{$pkg} || die "No meta class for package $pkg";
 }
