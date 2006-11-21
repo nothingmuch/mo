@@ -78,10 +78,13 @@ sub pop {
 sub push {
 	my ( $self, $item, @params ) = @_;
 
+	chomp( my $debug = do { local $Carp::CarpLevel = $Carp::CarpLevel + 2;; Carp::shortmess } );
+
 	my $frame = MO::Run::Aux::Stack::Frame->new(
 		item    => $item,
 		stack   => $self,
 		autopop => defined(wantarray),
+		debug   => $debug,
 		@params,
 	);
 
@@ -94,6 +97,12 @@ sub push {
 	}
 
 	return $frame;
+}
+
+sub dump {
+	my $self = shift;
+
+	join("\n  ", map { join "", grep { defined } $_->item, $_->debug } reverse $self->frames) . "\n";
 }
 
 __PACKAGE__;

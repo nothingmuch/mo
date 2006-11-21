@@ -105,6 +105,17 @@ sub stack (;@) {
 	}
 }
 
+sub stack_dump {
+	my $doit = defined(wantarray) ? sub { shift } : sub { warn };
+
+	if ( MO_NATIVE_RUNTIME ) {
+		require Carp;
+		return $doit->( "stack dump" . Carp::longmess() );
+	} else {
+		return $doit->( stack()->dump );
+	}
+}
+
 sub method_call ($$;@) {
 	my ( $invocant, $method, @arguments ) = @_;
 

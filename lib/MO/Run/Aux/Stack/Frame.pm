@@ -21,6 +21,11 @@ has item => (
 	required => 1,
 );
 
+has debug => (
+	isa => "Str",
+	is  => "rw",
+);
+
 has _popped => (
 	isa => "Bool",
 	is  => "rw",
