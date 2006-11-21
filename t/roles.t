@@ -9,6 +9,7 @@ use Test::Exception;
 use ok 'MO::Compile::Class::MI';
 use ok 'MO::Compile::Role';
 use ok 'MO::Compile::Method::Simple';
+use ok 'MO::Compile::Method::Stub';
 use ok 'MO::Compile::Attribute::Simple';
 
 {
@@ -262,3 +263,30 @@ use ok 'MO::Compile::Attribute::Simple';
 		$with_conflict->filter_composition_failures( @methods );
 	} qr/^Composition failures in .*?Symmetric composition error over key 'foo'/s, "composition error thrown";
 }
+
+{
+	my $no_conflict = MO::Compile::Class::MI->new(
+		roles => [
+			MO::Compile::Role->new(
+				instance_methods => [
+					MO::Compile::Method::Simple->new(
+						name       => "foo",
+						definition => sub { "foo" },
+					),
+				],
+			),
+			MO::Compile::Role->new(
+				instance_methods => [
+					MO::Compile::Method::Stub->new(
+						name       => "foo",
+					),
+				],
+			),
+		],
+	);
+
+	my @methods = $no_conflict->all_instance_methods;
+	is( @methods, 1, "one method, stub lost in conflict" );
+	is( $methods[0]->name, "foo", "named foo" );
+}
+
