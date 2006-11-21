@@ -13,12 +13,24 @@ has conflict_class => (
 	default => "MO::Compile::Composable::Symmetric::Conflict",
 );
 
+sub filter_non_weak_items {
+	my ( $self, @items ) = @_;
+
+	grep { not( $_->can("is_weak") && $_->is_weak ) } @items;
+}
+
 sub merge_conflict {
 	my ( $self, @items ) = @_;
 
-	$self->conflict_class->new(
-		items => \@items,
-	);
+	my @non_weak = $self->filter_non_weak_items( @items );
+
+	if ( @non_weak == 1 ) {
+		return $non_weak[0];
+	} else {
+		$self->conflict_class->new(
+			items => \@items,
+		);
+	}
 }
 
 __PACKAGE__;

@@ -7,11 +7,16 @@ requires "attached_item";
 
 requires "origin";
 
-sub is_composition_failure {
-	my $self = shift;
+use tt;
+[% FOR method IN [ "is_composition_failure", "is_weak", "stringify" ] %]
 
-	$self->attached_item->can("is_composition_failure") && $self->attached_item->is_composition_failure;
+sub [% method %] {
+	my ( $self, @args ) = @_;
+	$self->attached_item->can("[% method %]") && $self->attached_item->[% method %](@args);
 }
+
+[% END %]
+no tt;
 
 __PACKAGE__;
 
