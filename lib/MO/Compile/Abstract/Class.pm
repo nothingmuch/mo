@@ -48,8 +48,20 @@ sub handle_composition_failures {
 	# FIXME make into an error object so that it can be dissected, this is potentially a huge $@
 	die join("\n  ",
 		"Composition failures in $self:",
-		map { $_->can("stringify") ? $_->stringify : $_ } @failures
+		map { $self->display_composition_failure($_) } @failures,
 	);
+}
+
+sub display_composition_failure {
+	my ( $self, $failure ) = @_;
+
+	if ( $failure->can("attached_item") ) {
+		my ( $attached, $origin ) = ( $failure->attached_item, $failure->origin );
+
+		$self->display_composition_failure( $attached ) . " (from $origin)";
+	} else {
+		$failure->can("stringify") ? $failure->stringify : "$failure";
+	}
 }
 
 sub compile_method {
