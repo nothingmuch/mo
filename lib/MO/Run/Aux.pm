@@ -124,7 +124,7 @@ sub method_call ($$;@) {
 		if ( ref $method ) {
 			# FIXME the responder interface should take care of this
 			my $body = $method->body;
-			$invocant->$body( @arguments );
+			return $invocant->$body( @arguments );
 		} else {
 			require MO::Run::Invocation::Method;
 			my $thunk = $ri->dispatch(
