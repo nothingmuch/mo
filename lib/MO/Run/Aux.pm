@@ -203,7 +203,7 @@ sub compile_pmc {
 	$src =~ s{ ^ \* ([\w:]+) \s* = \s* sub }{\nsub $1}gmx;
 
 	# we're emitting a use base line
-	$src =~ s{ ^ \* ISA .*? \n }{}gmx;
+	$src =~ s{ ^ \* ISA \s* = .*? \n }{}gmx;
 
 	Generate::PMC::File->new(
 		input_file              => $file,
@@ -215,8 +215,9 @@ sub compile_pmc {
 			'BEGIN { $MO::Run::Aux::MO_NATIVE_RUNTIME = ' . MO_NATIVE_RUNTIME .' }',
 			'BEGIN { $MO::Run::Aux::MO_NATIVE_RUNTIME_NO_INDIRECT_BOX = ' . MO_NATIVE_RUNTIME_NO_INDIRECT_BOX . ' }',
 			'use MO::Run::Aux;',
-			'MO::Run::Aux::register_pmc_class(__PACKAGE__);',
+			# FIXME use lines, etc
 			$src,
+			'MO::Run::Aux::register_pmc_class(__PACKAGE__);',
 			'1;',
 			'',
 		],
