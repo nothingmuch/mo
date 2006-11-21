@@ -29,13 +29,15 @@ INIT {
 END {
 	__PACKAGE__->finish("total", grep { not exists $statistics{$_} } keys %starts);
 
+	*MO::Run::Aux::MO_NATIVE_RUNTIME = sub { 0 } unless defined &MO::Run::Aux::MO_NATIVE_RUNTIME;
+
 	if ( $ENV{MO_BENCH} and $? == 0 ) {
 		require YAML::Syck;
 		if ( my $file = $ENV{MO_BENCH_FILE} ) {
 
 			my $struct = -e $file ? YAML::Syck::LoadFile($file) : {};
 
-			my $saved = $struct->{ $ENV{MO_NATIVE_RUNTIME} ? "native" : "interpreted" }{$0};
+			my $saved = $struct->{ MO::Run::Aux::MO_NATIVE_RUNTIME() ? "native" : "interpreted" }{$0};
 
 			if ( $ENV{MO_BENCH_AVG} ) {
 				$saved = {} unless ref $saved eq 'HASH';
@@ -57,7 +59,7 @@ END {
 				}
 			}
 
-			$struct->{ $MO::Run::Aux::MO_NATIVE_RUNTIME ? "native" : "interpreted" }{$0} = $saved;
+			$struct->{ MO::Run::Aux::MO_NATIVE_RUNTIME() ? "native" : "interpreted" }{$0} = $saved;
 
 			YAML::Syck::DumpFile($file, $struct);
 		} else {
