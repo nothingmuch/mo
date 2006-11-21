@@ -4,11 +4,15 @@
 - next/super etc -- methods must be MRO aware - this required a split into
   ::Compiled much like attr is right now.
 
-- add an emitter that can take a collection of method interfaces and compile
-  them down to perl 5 packages. Points that must be considered:
-	- private methods must be wrapped with redispatchers
+- Emitter TODO
 	- foreign dispatch types must be dispatchable via ->meta calls, i guess
 	- use a comparative-merge approach so that foreign MROs can still work
+	  (depends on next/super)
+	- do roles get emitted? we need something for disambiguation... I guess
+	  stubs are skipped, but aside from that methods (including accessors)
+	  should get created, with accessors getting a null target.
+	- exclude subs who come from elsewhere from the dump (imported routines,
+	  etc). Talk to demerphq about this.
 
 - Perl::Generate based slot/accessor incest
 
@@ -20,7 +24,7 @@
 
 	precendence list based enumartion:
 
-		MO::Compile::Enumerating
+		MO::Compile::Enumera(ting|ble)
 
 			get_all_using_* combinators
 
@@ -38,3 +42,12 @@
 
 		method merging
 
+- Abstract roles for top level objects (MO::Compile::Concept?) and sub objects
+  (MO::Compile::Element?) (split to two levels?)
+
+- Split MO::Compile::Aux from MO::Run::Aux to improve load times (the PMC
+  compilation shit doesn't have to be in runtime).
+
+- Also consider removing 'use warnings' as it nearly doubles the load time
+  right now (from MO::Run::Aux for runtime support and MO::Emit::P5 for
+  serialized code refs).
