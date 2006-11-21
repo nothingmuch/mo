@@ -7,25 +7,27 @@ use Class::MOP::Package;
 use Tie::RefHash;
 use Carp qw/croak/;
 
-has classes => (
-	isa => "HashRef",
-	is  => "rw",
-	default => sub { return {} }
-);
+foreach my $field (qw/classes roles/) {
+	has $field => (
+		isa => "HashRef",
+		is  => "rw",
+		default => sub { return {} }
+	);
 
-has classes_inverted => (
-	isa => "HashRef",
-	is  => "rw",
-	default => sub { tie my %h, "Tie::RefHash"; \%h },
-);
+	has "${field}_inverted" => (
+		isa => "HashRef",
+		is  => "rw",
+		default => sub { tie my %h, "Tie::RefHash"; \%h },
+	);
+}
 
-has pmc_classes => (
+has pmc_packages => (
 	isa => "HashRef",
 	is  => "rw",
 	default => sub { return {} },
 );
 
-has packages => (
+has package_objects => (
 	isa => "HashRef",
 	is  => "rw",
 	default => sub { return {} }
@@ -65,6 +67,11 @@ sub autovivify_class {
 	return $self->package_of_class($class);
 }
 
+sub role_is_registered {
+	my ( $self, $class ) = @_;
+	exists $self->roles_inverted->{$class};
+}
+
 sub class_is_registered {
 	my ( $self, $class ) = @_;
 	exists $self->classes_inverted->{$class};
@@ -75,10 +82,22 @@ sub package_of_class {
 	$self->classes_inverted->{$class};
 }
 
+sub package_to_meta {
+	my ( $self, $pkg ) = @_;
+	$self->load_pmc_meta($pkg);
+	$self->classes($pkg) || $self->roles($pkg) || die "No meta for package $pkg";
+}
+
+sub role_of_package {
+	my ( $self, $pkg ) = @_;
+	$self->load_pmc_meta($pkg);
+	$self->roles->{$pkg} || die "No meta role for package $pkg";
+}
+
 sub class_of_package {
 	my ( $self, $pkg ) = @_;
 	$self->load_pmc_meta($pkg);
-	$self->classes->{$pkg};
+	$self->classes->{$pkg} || die "No meta class for package $pkg";
 }
 
 sub class_is_emitted {
@@ -89,11 +108,11 @@ sub class_is_emitted {
 sub emit_all_classes {
 	my ( $self, @params ) = @_;
 
-	foreach my $pkg ( keys %{ $self->packages } ) {
-		my $class = $self->classes->{$pkg};
-		next if $self->pmc_classes->{$pkg} or $self->emitted->{$class}++;
+	foreach my $pkg ( keys %{ $self->package_objects } ) {
+		my $class = $self->classes->{$pkg} || next;
+		next if $self->pmc_packages->{$pkg} or $self->emitted->{$class}++;
 
-		my $pkg_obj = $self->packages->{$pkg};
+		my $pkg_obj = $self->package_objects->{$pkg};
 
 		# remove the AUTOLOAD trampoline
 		$pkg_obj->remove_package_symbol('&AUTOLOAD');
@@ -107,6 +126,23 @@ sub emit_all_classes {
 	}
 }
 
+sub register_role {
+	my ( $self, $package, $role, @params ) = @_;
+
+	if ( ref $package ) {
+		unshift @params, $role if defined $role;
+		$role = $package;
+		$package = caller();
+	}
+
+	die "Package $package is already in use" if exists $self->package_objects->{$package};
+	die "Role $role is already registered as " . $self->roles_inverted->{$role} if exists $self->roles_inverted->{$role};
+
+	my $pkg_obj = $self->package_objects->{$package} = $self->create_package_object( $package );
+	$self->roles_inverted->{$role} = $package;
+	$self->roles->{$package} = $role;
+}
+
 sub register_class {
 	my ( $self, $package, $class, @params ) = @_;
 
@@ -116,14 +152,14 @@ sub register_class {
 		$package = caller();
 	}
 
-	die "Package $package is already in use" if exists $self->classes->{package};
+	die "Package $package is already in use" if exists $self->package_objects->{$package};
 	die "Class $class is already registered as " . $self->classes_inverted->{$class} if exists $self->classes_inverted->{$class};
 
-	my $pkg_obj = $self->packages->{$package} = $self->create_package_object( $package );
+	my $pkg_obj = $self->package_objects->{$package} = $self->create_package_object( $package );
 	$self->classes_inverted->{$class} = $package;
 	$self->classes->{$package} = $class;
 
-	unless ( $self->pmc_classes->{$package} ) {
+	unless ( $self->pmc_packages->{$package} ) {
 		$pkg_obj->add_package_symbol( '&AUTOLOAD' => sub {
 			# let the package spring into existence
 			# this will also remove our AUTOLOAD
@@ -145,13 +181,13 @@ sub register_class {
 sub register_pmc_class {
 	my ( $self, $pkg ) = @_;
 
-	$self->pmc_classes->{$pkg}++;
+	$self->pmc_packages->{$pkg}++;
 }
 
 sub load_pmc_meta {
 	my ( $self, $pkg ) = @_;
-	return if $self->packages->{$pkg};
-	return unless $self->pmc_classes->{$pkg};
+	return if $self->package_objects->{$pkg};
+	return unless $self->pmc_packages->{$pkg};
 
 	(my $file = "${pkg}.pm") =~ s{::}{/}g;
 
