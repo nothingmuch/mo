@@ -5,14 +5,14 @@ use warnings;
 
 use Test::More 'no_plan';
 
+BEGIN { $MO::Run::Aux::MO_NATIVE_RUNTIME = 0 };
+
 use ok "MO::Compile::Class::MI";
 use ok "MO::Compile::Method::Simple";
 use ok "MO::Run::Invocation::Method";
 use ok "MO::Run::Responder::Invocant";
 use ok "MO::Run::Aux::Stack";
 use ok "MO::Run::Aux";
-
-$MO::Run::MO_NATIVE_RUNTIME = 0;
 
 my $base = MO::Compile::Class::MI->new(
 	instance_methods => [
