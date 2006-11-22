@@ -1,0 +1,196 @@
+# Notes:
+#
+# This is for class based OO, not for prototype based OO
+# that would require a slightly different Constructable role, whose NEW calls
+# $proto.bless( $empty_layout, %overridden_fields ) or somesuch.
+#
+# maybe we only pass the fields which originated in class x to the submethod?
+# In e.g. FREEZEALL we could part the fieldset such that each FREEZE only gets
+# fields that belong to the class it was defined in.
+#
+# Passing around a hash is a bit unwiedly, perhaps there is a better (and
+# potentially more efficient) way?
+#
+# See notes below about attrs
+#
+# the private methods !create_instance etc are all accessible to the roles that
+# use them. Roles in the implicit_roles list are automatically trusted. In mo
+# this means that every method will now need to push it's own caller frame, not
+# per responder interface. MO::Aux::Run::caller can look up $pkg::$sub in a
+# table, and RIs will push $method->origin, not $ri->origin.
+
+class Object { # this class is implicitly an ancestor to every class in MI. It must be last in C3 order (is this consistent?)
+    # these roles are put on the implicit list of every class
+    # to remove them they must be removed both from the implicit list, and
+    # indirectly by removing this class. Roles conflicting with these must be
+    # resolved *per class*
+    does AttrArgsToFields;
+    does Constructable;
+    does Cloneable;
+    does Serializable;
+
+    meta MO::Compile::Class::MI; # provides !create_instance, !unpack_instance, !destroy_instance per class (not inherited)
+
+        method yaml {
+            .serialize( :serializer(+$YAML_SERIALIZER) );
+        }
+
+    method perl {
+        .serializer( :serializer(+$PERL_SERIALIZER) );
+    }
+}
+
+# is this too ugly? should it be a metaclass role?
+role AttrArgsToFields {
+    method process_arguments ( |$args ){
+        .ARGUMENTS_TO_FIELDS(|$args);
+    }
+
+    method ARGUMENTS_TO_FIELDS ( *%args, |$args ) { # collect all named params and save remaining in capture
+        my @attrs = .HOW.all_attributes_shadowed;
+
+        my %fields = gather	{
+            for @attrs -> $attr {
+                my $arg = given %args{ $attr.name } { exists ?? \( delete ) !! \() }
+                take $attr.process_params( |$arg );
+            }
+        }
+
+        return ( %fields, \( *%args, |$args ) );
+    }
+}
+
+role Constructable does AttrArgsToFields {
+    method new ( |$args ) { # default new only knows how to handle named
+        .NEW( |$args );
+    }
+
+    method NEW ( |$args ) {
+
+        my ( %fields, |$reamining_args ) = .process_arguments( |$args );
+
+        my $self = .!create_instance( %fields );
+
+        $self.BUILDALL( |$remaining_args );
+
+        return $self;
+    }
+
+    sub BUILDALL ( |$args ) {
+        my @methods = .HOW.find_all_submethods_by_name("BUILD");
+        self.$_(|$args) for @methods;
+    }
+
+    # when no one else can refer to $self finalize is called
+    method finalize () {
+        .FINALIZEALL();
+    }
+
+    method FINALIZEALL ( |$args ) {
+        my @methods = reverse .HOW.find_all_submethods_by_name("FINALIZE");
+        self.$_(|$args) for @methods;
+    }
+
+    # $self is being deallocated and might need your help
+    method destroy () {
+        .DESTROYALL();
+        .!destroy_instance();
+    }
+
+    method DESTROYALL ( |$args ) {
+        my @methods = reverse .HOW.find_all_submethods_by_name("DESTROY");
+        self.$_(|$args) for @methods;
+    }
+}
+
+role Serializable {
+    proto method serialize ( Serializer :$serializer, |$args ) {
+        my @values = .prepare_serialization( :$serializer, |$args );
+
+        $serializer.push_chunk( @values );
+    }
+
+    method prepare_serialization ( Serializer :$serializer, |$args ) {
+        my @fields = grep { not $_.?no_serialize } .HOW.layout.fields; # we're assuming this list is stable
+
+            my %fields = .!unpack_instance( :@fields ); # in hash context returns hash, in list context returns values
+
+            my %processed = .FREEZEALL( :$serializer, :%fields, |$args );
+
+        return %processed{ @fields }; # list
+    }
+
+    method FREEZEALL ( :%fields is copy, |$args ) {
+        my @methods = reverse .HOW.find_all_submethods_by_name("FREEZE");
+
+        for @methods -> $method { %fields = self.$method( :%fields, |$args ) }
+
+        return %fields;
+    }
+
+    proto method deserialize ( Deserializer :$deserializer, |$args ) {
+        my @values = $deserializer.next_chunk();
+
+        .finalize_deserialization( :$deserializer, :@values, |$args );
+    }
+
+    sub finalize_deserialization ( :@values, |$args ) {
+        my @fields = grep { not $_.?no_serialize } .HOW.layout.fields; # we're assuming this list is stable
+
+            my %fields = @fields ¥ @values;
+
+        .!create_instance( .THAWALL( :%fields, |$args ) );
+    }
+
+    method THAWALL ( :%fields is copy, |$args ) {
+        my @methods = .HOW.find_all_submethods_by_name("THAW");
+
+        for @methods -> $method { %fields = .$method( :%fields, |$args ) }
+
+        return %fields;
+    }
+}
+
+role Clonable does AttrArgsToFields {
+    method clone ( |$args ) {
+        .clone_instance(|$args);
+    }
+
+    method clone_instance( |$args ) {
+        my ( %override, |$remaining_args ) = .process_arguments( |$args );
+
+        my %fields = .prepare_clone(|$remaining_args);
+
+        my %final_fields = ( %fields, %override );
+
+        .finalize_clone( :fields(%final_fields), |$remaining_args );
+    }
+
+    method prepare_clone (|$args) {
+        my @fields = grep { not $_.?no_clone } .HOW.layout.fields;
+
+        return .PRECLONEALL( |$args, .!unpack_instance( :@fields ) );
+    }
+
+    method finalize_clone ( |$args ) {
+        .!create_instance( .POSTCLONEALL(|$args) );
+    }
+
+    method PRECLONEALL ( |$args ) {
+        my @methods = reverse .HOW.find_all_submethods_by_name("PRECLONE");
+
+        for @methods -> $method { %fields = .$method(|$args) }
+
+        return %fields;
+    }
+
+    method POSTCLONEALL ( |$args ) {
+        my @methods = .HOW.find_all_submethods_by_name("POSTCLONE");
+
+        for @methods -> $method { %fields = .$method(|$args) }
+
+        return %fields;
+    }
+}
+
+# vim:ft=perl6:noexpandtab
