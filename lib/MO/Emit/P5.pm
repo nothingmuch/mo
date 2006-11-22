@@ -133,10 +133,10 @@ sub merge_methods_by_caller {
 	my ( $self, $name, $caller_table ) = @_;
 
 	if ( my $public = delete $caller_table->{public} ) {
-		sub { goto $caller_table->{MO::Run::Aux::caller()} || $public }
+		sub { goto $caller_table->{caller()} || $public }
 	} else {
 		sub {
-			goto $caller_table->{MO::Run::Aux::caller() } ||
+			goto $caller_table->{caller()} ||
 				croak qq{Can't locate object method "$name" via package "} . (ref($_[0]) || $_[0]) . '"';
 		};
 	}
@@ -145,8 +145,10 @@ sub merge_methods_by_caller {
 sub _bycaller_register_table {
 	my ( $self, $methods, $caller, $hash ) = @_;
 
+	my $pkg = MO::Run::Aux::registry()->package_of_class( $caller );
+
 	foreach my $method ( keys %$hash ) {
-		$methods->{$method}{$caller} = $hash->{$method};
+		$methods->{$method}{$pkg} = $hash->{$method};
 	}
 }
 
