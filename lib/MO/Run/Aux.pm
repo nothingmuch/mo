@@ -96,6 +96,16 @@ sub unbox_value ($) {
 	}
 }
 
+sub unbox_ri ($) {
+	my $responder = shift;
+
+	if ( MO_NATIVE_RUNTIME ) {
+		return $REGISTRY->class_of_package( ref $responder || $responder );
+	} else {
+		return $responder->responder_interface;
+	}
+}
+
 sub stack (;@) {
 	if ( @_ ) {
 		return $STACK = shift;
