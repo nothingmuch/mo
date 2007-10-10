@@ -9,7 +9,7 @@ MO::Overview - An overview of the MO experimental meta-object protocol.
 This document explains the architecture in L<MO> and assumes you are
 familiar with its overall structure and purpose.
 
-=head1 10,000" VIEW
+=head1 10,000' VIEW
 
 MO is a meta-object protocol, much like the CLOS and L<Class::MOP>.
 
